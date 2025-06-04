@@ -1,0 +1,133 @@
+/* CSS Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body with improved background */
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+}
+
+/* Map container with enhanced styling */
+#map {
+    margin: 2rem auto;
+    margin-bottom: 2rem;
+    height: 600px;
+    width: min(90%, 1200px);
+    background: linear-gradient(145deg, #ffffff, #f8f9fa);
+    border-radius: 20px;
+    box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.2),
+        0 1px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Map hover effect */
+#map:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+        0 15px 40px rgba(0, 0, 0, 0.25),
+        0 5px 15px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced save button */
+.save_btn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+    text-decoration: none;
+    padding: 14px 32px;
+    cursor: pointer;
+    display: block;
+    position: relative;
+    z-index: 1;
+    margin: 2rem auto;
+    border: none;
+    outline: none;
+    border-radius: 50px;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    text-align: center;
+    letter-spacing: 0.5px;
+    min-width: 140px;
+    width: fit-content;
+}
+
+/* Button hover effects */
+.save_btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+    background: linear-gradient(135deg, #5a6fd8, #6b42a0);
+}
+
+/* Button active state */
+.save_btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* Button focus state for accessibility */
+.save_btn:focus {
+    box-shadow: 
+        0 8px 25px rgba(102, 126, 234, 0.6),
+        0 0 0 3px rgba(102, 126, 234, 0.3);
+}
+
+/* Ripple effect pseudo-element */
+.save_btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+    z-index: -1;
+}
+
+.save_btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    #map {
+        width: 95%;
+        height: 400px;
+        margin: 1rem auto;
+        border-radius: 15px;
+    }
+    
+    .save_btn {
+        padding: 12px 24px;
+        font-size: 14px;
+        margin: 1.5rem auto;
+    }
+}
+
+@media (max-width: 480px) {
+    #map {
+        height: 300px;
+        border-radius: 12px;
+    }
+    
+    .save_btn {
+        padding: 10px 20px;
+        font-size: 13px;
+        margin: 1rem auto;
+    }
+}

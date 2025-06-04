@@ -37,7 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'geo',
+    'django.contrib.gis', # GIS support
+    'geo',  # Your GIS app
+    'leaflet',  # Leaflet for GIS mapping
 ]
 
 MIDDLEWARE = [
