@@ -68,17 +68,42 @@ map.on('draw:created', function (e) {
 });
 
 // Save as GeoJSON button
+
+
+
 document.getElementById('save-btn').onclick = function() {
     var data = drawnItems.toGeoJSON();
-    var json = JSON.stringify(data, null, 2);
-    var blob = new Blob([json], {type: "application/json"});
-    var url  = URL.createObjectURL(blob);
-
-    var a = document.createElement('a');
-    a.download = "data.geojson";
-    a.href = url;
-    a.textContent = "Download GeoJSON";
-
-    a.click();
-    URL.revokeObjectURL(url);
+    var name = document.getElementById('shape-name').value || 'Drawn Shape';
+    data['name'] = name; // Add name to the data sent
+    fetch('/geo/save/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        alert(result.message);
+    })
+    .catch(error => {
+        alert('Error saving data');
+    });
 };
+
+// Helper to get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
