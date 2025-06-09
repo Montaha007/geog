@@ -1,47 +1,42 @@
-/* CSS Reset and Base Styles */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* Body with improved background */
 body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #b7eac5 0%, #e6f5d7 100%);
     min-height: 100vh;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
 }
 
-/* Map container with enhanced styling */
 #map {
     margin: 2rem auto;
     margin-bottom: 2rem;
     height: 600px;
     width: min(90%, 1200px);
-    background: linear-gradient(145deg, #ffffff, #f8f9fa);
+    background: linear-gradient(145deg, #f6fff8, #e6f5d7);
     border-radius: 20px;
     box-shadow: 
-        0 10px 30px rgba(0, 0, 0, 0.2),
-        0 1px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+        0 10px 30px rgba(120, 180, 120, 0.15),
+        0 1px 8px rgba(120, 180, 120, 0.08);
+    border: 1px solid rgba(183, 234, 197, 0.3);
     position: relative;
     overflow: hidden;
 }
 
-/* Map hover effect */
 #map:hover {
     transform: translateY(-2px);
     box-shadow: 
-        0 15px 40px rgba(0, 0, 0, 0.25),
-        0 5px 15px rgba(0, 0, 0, 0.15);
+        0 15px 40px rgba(120, 180, 120, 0.18),
+        0 5px 15px rgba(120, 180, 120, 0.12);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Enhanced save button */
 .save_btn {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
+    background: linear-gradient(135deg, #a8e6a3, #d0f5be);
+    color: #355c3a;
     font-weight: 600;
     font-size: 16px;
     text-decoration: none;
@@ -56,34 +51,30 @@ body {
     border-radius: 50px;
     overflow: hidden;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 15px rgba(120, 180, 120, 0.18);
     text-align: center;
     letter-spacing: 0.5px;
     min-width: 140px;
     width: fit-content;
 }
 
-/* Button hover effects */
 .save_btn:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
-    background: linear-gradient(135deg, #5a6fd8, #6b42a0);
+    box-shadow: 0 8px 25px rgba(120, 180, 120, 0.28);
+    background: linear-gradient(135deg, #8fd19e, #b7eac5);
 }
 
-/* Button active state */
 .save_btn:active {
     transform: translateY(-1px);
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 15px rgba(120, 180, 120, 0.18);
 }
 
-/* Button focus state for accessibility */
 .save_btn:focus {
     box-shadow: 
-        0 8px 25px rgba(102, 126, 234, 0.6),
-        0 0 0 3px rgba(102, 126, 234, 0.3);
+        0 8px 25px rgba(120, 180, 120, 0.28),
+        0 0 0 3px rgba(183, 234, 197, 0.25);
 }
 
-/* Ripple effect pseudo-element */
 .save_btn::before {
     content: '';
     position: absolute;
@@ -91,7 +82,7 @@ body {
     left: 50%;
     width: 0;
     height: 0;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(183, 234, 197, 0.2);
     border-radius: 50%;
     transform: translate(-50%, -50%);
     transition: width 0.6s, height 0.6s;
@@ -102,8 +93,17 @@ body {
     width: 300px;
     height: 300px;
 }
-
-/* Responsive design */
+.shape-name-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #b7eac5;
+    border-radius: 8px;
+    font-size: 16px;
+    color: #355c3a;
+    background-color: #f6fff8;
+    box-shadow: inset 0 2px 4px rgba(120, 180, 120, 0.1);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}    
 @media (max-width: 768px) {
     #map {
         width: 95%;
@@ -130,4 +130,41 @@ body {
         font-size: 13px;
         margin: 1rem auto;
     }
+}
+.header {
+    width: 100%;
+    padding: 1.2rem 0;
+    background: linear-gradient(90deg, #e6f5d7 60%, #b7eac5 100%);
+    color: #355c3a;
+    font-size: 1.2rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(120, 180, 120, 0.08);
+    margin-bottom: 1.5rem;
+}
+
+.header span {
+    margin-left: 2rem;
+}
+
+.header form {
+    margin-right: 2rem;
+}
+
+.header button {
+    background: linear-gradient(135deg, #b7eac5, #a8e6a3);
+    color: #355c3a;
+    border: none;
+    border-radius: 25px;
+    padding: 8px 22px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.header button:hover {
+    background: linear-gradient(135deg, #a8e6a3, #d0f5be);
 }

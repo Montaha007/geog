@@ -8,4 +8,5 @@ class Location(geomodels.Model):
         return self.name
 
 
+
     
