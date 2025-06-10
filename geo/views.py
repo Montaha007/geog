@@ -24,10 +24,14 @@ def save_geojson(request):
             Location.objects.create(
                 name=name,
                 point=geom if geom.geom_type == 'Point' else None,
-                shape=geom if geom.geom_type != 'Point' else None
+                shape=geom if geom.geom_type != 'Point' else None,
+                user=request.user  # Associate with the logged-in user
             )
         return JsonResponse({'message': 'Data saved!'})
     return JsonResponse({'message': 'Invalid request'}, status=400)
+def history_view(request):
+    hist= Location.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'Gis/history.html', {'history': hist})
 
 
 
@@ -54,15 +58,11 @@ def register_view(request):
         email = request.POST.get('email')
         password1 = request.POST.get('password1')
         password2 = request.POST.get('password2')
-
         if User.objects.filter(username=username).exists():
             return render(request, 'Gis/register.html', {'error': 'Username already exists'})
-
         if password1 != password2:
             return render(request, 'Gis/register.html', {'error': 'Passwords do not match'})
-
         user = User.objects.create_user(username=username, email=email, password=password1)
-        
         # Optional: make sure user is active
         user.is_active = True
         user.save()
@@ -70,8 +70,31 @@ def register_view(request):
         user = authenticate(request, username=username, password=password1)
         if user is not None:
             login(request, user)
-            return redirect('location')
+            return redirect('location')  # Redirect to your map view
         else:
             return render(request, 'Gis/register.html', {'error': 'Authentication failed after registration'})
-    
     return render(request, 'Gis/register.html')
+
+
+
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import get_object_or_404, redirect
+from .models import Location
+
+def download_location(request, pk):
+    loc = get_object_or_404(Location, pk=pk)
+    if loc.shape:
+        geojson = loc.shape.geojson
+    elif loc.point:
+        geojson = loc.point.geojson
+    else:
+        geojson = '{}'
+    response = HttpResponse(geojson, content_type='application/geo+json')
+    response['Content-Disposition'] = f'attachment; filename="{loc.name}.geojson"'
+    return response
+def delete_location(request, pk):
+    loc = get_object_or_404(Location, pk=pk)
+    if request.method == 'POST':
+        loc.delete()
+        return redirect('history')  # Use the correct URL name for your history page
+    return redirect('history')

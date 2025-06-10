@@ -9,6 +9,7 @@ body {
     min-height: 100vh;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
+
 }
 
 #map {
@@ -95,6 +96,7 @@ body {
 }
 .shape-name-input {
     width: 100%;
+    margin-bottom: 10px;
     padding: 12px 16px;
     border: 1px solid #b7eac5;
     border-radius: 8px;
@@ -163,8 +165,28 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: background 0.3s;
+    margin-right: 2rem;
+    display: inline-block;
 }
 
 .header button:hover {
+    background: linear-gradient(135deg, #a8e6a3, #d0f5be);
+}
+.header a {
+    background: linear-gradient(135deg, #b7eac5, #a8e6a3);
+    color: #355c3a;
+    border: none;
+    border-radius: 25px;
+    padding: 8px 22px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s;
+    text-decoration: none;
+    margin-right: 1rem;
+    display: inline-block;
+}
+
+.header a:hover {
     background: linear-gradient(135deg, #a8e6a3, #d0f5be);
 }

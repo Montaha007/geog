@@ -1,29 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Map</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'geo/css/map.css' %}">
+{% extends "Gis/home.html" %}
+{%load static%}
+{% block title %}Map View{% endblock %}
 
-</head>
-<body>
-    <div class="header">
-    <span>Welcome, {{ request.user.username }}</span>
-    <form action="{% url 'logout' %}" method="post" style="display:inline;">
-        {% csrf_token %}
-        <button type="submit">Logout</button>
-    </form>
-    </div>
-    
+{% block content %}
     <div id="map"></div>
     <input type="text" id="shape-name" placeholder="Enter shape name" class="shape-name-input">
+    <div class="form-floating">
+        <textarea class="form-control" placeholder="Leave a comment here" id="floatingTextarea2" style="height: 100px"></textarea>
+        <label for="floatingTextarea2">Comments</label>
+    </div>
     <button id="save-btn" class="save_btn">Save as GeoJSON</button>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+{% endblock %}
+
+{% block scripts %}
     <script src="{% static 'geo/js/map.js' %}"></script>
-</body>
-</html>
+{% endblock %}

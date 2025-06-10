@@ -72,9 +72,34 @@ map.on('draw:created', function (e) {
 
 
 document.getElementById('save-btn').onclick = function() {
-    var data = drawnItems.toGeoJSON();
-    var name = document.getElementById('shape-name').value || 'Drawn Shape';
-    data['name'] = name; // Add name to the data sent
+    let features = [];
+    drawnItems.eachLayer(function(layer) {
+        let feature;
+        if (layer instanceof L.Circle) {
+            // Save as point + radius
+            feature = {
+                type: "Feature",
+                geometry: {
+                    type: "Point",
+                    coordinates: [layer.getLatLng().lng, layer.getLatLng().lat]
+                },
+                properties: {
+                    radius: layer.getRadius()
+                }
+            };
+        } else {
+            // Default GeoJSON export for other shapes
+            feature = layer.toGeoJSON();
+        }
+        features.push(feature);
+    });
+
+    let data = {
+        type: "FeatureCollection",
+        features: features,
+        name: document.getElementById('shape-name').value || 'Drawn Shape'
+    };
+
     fetch('/geo/save/', {
         method: 'POST',
         headers: {
@@ -91,7 +116,6 @@ document.getElementById('save-btn').onclick = function() {
         alert('Error saving data');
     });
 };
-
 // Helper to get CSRF token
 function getCookie(name) {
     let cookieValue = null;
