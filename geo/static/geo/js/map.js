@@ -69,36 +69,18 @@ map.on('draw:created', function (e) {
 
 // Save as GeoJSON button
 
+document.getElementById('save-btn').onclick = function () {
+    var name = document.getElementById('shape-name').value || 'Unnamed';
+    var rtsp = document.getElementById('rtsp-link').value || '';
+    var geojson = drawnItems.toGeoJSON();
 
+    if (!geojson.features.length) {
+        alert("Please draw a shape first.");
+        return;
+    }
 
-document.getElementById('save-btn').onclick = function() {
-    let features = [];
-    drawnItems.eachLayer(function(layer) {
-        let feature;
-        if (layer instanceof L.Circle) {
-            // Save as point + radius
-            feature = {
-                type: "Feature",
-                geometry: {
-                    type: "Point",
-                    coordinates: [layer.getLatLng().lng, layer.getLatLng().lat]
-                },
-                properties: {
-                    radius: layer.getRadius()
-                }
-            };
-        } else {
-            // Default GeoJSON export for other shapes
-            feature = layer.toGeoJSON();
-        }
-        features.push(feature);
-    });
-
-    let data = {
-        type: "FeatureCollection",
-        features: features,
-        name: document.getElementById('shape-name').value || 'Drawn Shape'
-    };
+    geojson.name = name;
+    geojson.rtsp = rtsp;
 
     fetch('/geo/save/', {
         method: 'POST',
@@ -106,16 +88,18 @@ document.getElementById('save-btn').onclick = function() {
             'Content-Type': 'application/json',
             'X-CSRFToken': getCookie('csrftoken')
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(geojson)
     })
     .then(response => response.json())
     .then(result => {
         alert(result.message);
     })
     .catch(error => {
-        alert('Error saving data');
+        console.error(error);
+        alert("Failed to save.");
     });
 };
+
 // Helper to get CSRF token
 function getCookie(name) {
     let cookieValue = null;
@@ -131,3 +115,9 @@ function getCookie(name) {
     }
     return cookieValue;
 }
+
+
+
+// ...existing code...
+
+// ...existing code...

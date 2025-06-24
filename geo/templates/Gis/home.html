@@ -16,6 +16,9 @@
 
     <div class="header">
         <span>Welcome, {{ request.user.username }}</span>
+        <form action="{% url 'location' %}" method="get" style="display:inline;">
+            <button type="submit">Map</button>
+        </form>
         <form action="{% url 'history' %}" method="get" style="display:inline;">
             <button type="submit">History</button>
         </form>

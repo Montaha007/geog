@@ -19,16 +19,19 @@ def save_geojson(request):
         data = json.loads(request.body)
         features = data.get('features', [])
         name = data.get('name', 'Drawn Shape')
+        rtsp = data.get('rtsp', '')  # Get RTSP link from data
         for feature in features:
             geom = GEOSGeometry(json.dumps(feature['geometry']))
             Location.objects.create(
                 name=name,
                 point=geom if geom.geom_type == 'Point' else None,
                 shape=geom if geom.geom_type != 'Point' else None,
+                rtsp=rtsp,  # Save RTSP link
                 user=request.user  # Associate with the logged-in user
             )
         return JsonResponse({'message': 'Data saved!'})
     return JsonResponse({'message': 'Invalid request'}, status=400)
+
 def history_view(request):
     hist= Location.objects.filter(user=request.user).order_by('-created_at')
     return render(request, 'Gis/history.html', {'history': hist})
@@ -79,7 +82,6 @@ def register_view(request):
 
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
-from .models import Location
 
 def download_location(request, pk):
     loc = get_object_or_404(Location, pk=pk)

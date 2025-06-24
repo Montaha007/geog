@@ -7,10 +7,10 @@ class Location(geomodels.Model):
     created_at = geomodels.DateTimeField(auto_now_add=True)
     updated_at = geomodels.DateTimeField(auto_now=True)
     user = geomodels.ForeignKey(User, on_delete=geomodels.CASCADE, related_name='locations')  # Add this line
-    
+    rtsp = geomodels.CharField(max_length=255, blank=True, null=True)
+   
     def __str__(self):
         return self.name
-
 
 
     

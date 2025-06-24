@@ -1,6 +1,4 @@
-// history.js
-document.addEventListener("DOMContentLoaded", function () {
-    // Search functionality
+window.initHistorySearch = function() {
     const searchInput = document.getElementById('searchInput');
     const categoryFilter = document.getElementById('categoryFilter');
     const searchBtn = document.getElementById('searchBtn');
@@ -18,9 +16,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function updateResultsCount(visibleCount, totalCount) {
         if (visibleCount === totalCount) {
-            resultsInfo.innerHTML = `Showing all ${totalCount} locations`;
+            resultsInfo.innerHTML = `<i class="fas fa-info-circle me-1"></i>Showing all ${totalCount} locations`;
         } else {
-            resultsInfo.innerHTML = `Showing ${visibleCount} of ${totalCount} locations`;
+            resultsInfo.innerHTML = `<i class="fas fa-filter me-1"></i>Showing ${visibleCount} of ${totalCount} locations`;
         }
     }
 
@@ -29,7 +27,6 @@ document.addEventListener("DOMContentLoaded", function () {
         const selectedCategory = categoryFilter.value;
         let visibleCount = 0;
 
-        // Clear previous highlights
         document.querySelectorAll('.search-text').forEach(el => {
             el.innerHTML = el.textContent;
         });
@@ -44,7 +41,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 item.style.display = 'block';
                 visibleCount++;
                 
-                // Highlight search terms
                 if (searchTerm) {
                     const titleEl = item.querySelector('.card-title');
                     titleEl.innerHTML = highlightText(titleEl.textContent, searchTerm);
@@ -56,7 +52,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         updateResultsCount(visibleCount, historyItems.length);
         
-        // Show/hide no results message
         if (visibleCount === 0 && (searchTerm || selectedCategory !== 'all')) {
             noResults.style.display = 'block';
             historyList.style.display = 'none';
@@ -81,7 +76,6 @@ document.addEventListener("DOMContentLoaded", function () {
     searchInput.addEventListener('input', performSearch);
     categoryFilter.addEventListener('change', performSearch);
     
-    // Enter key support
     searchInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             performSearch();
@@ -91,9 +85,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Quick filter buttons
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            // Remove active class from all buttons
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            // Add active class to clicked button
             this.classList.add('active');
             
             const filter = this.dataset.filter;
@@ -120,14 +112,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 item.style.display = shouldShow ? 'block' : 'none';
             });
             
-            // Update results count
             const visibleItems = Array.from(historyItems).filter(item => 
                 item.style.display !== 'none'
             ).length;
             updateResultsCount(visibleItems, historyItems.length);
         });
     });
-
-    // Initial results count
     updateResultsCount(historyItems.length, historyItems.length);
-});
+};
