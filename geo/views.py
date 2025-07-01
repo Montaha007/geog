@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.gis.geos import GEOSGeometry
 from .models import Location
+from cams.models import Camera
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
@@ -19,21 +20,32 @@ def save_geojson(request):
         data = json.loads(request.body)
         features = data.get('features', [])
         name = data.get('name', 'Drawn Shape')
-        rtsp = data.get('rtsp', '')  # Get RTSP link from data
+        rtsp = data.get('rtsp', '')  # Get RTSP link
+
         for feature in features:
             geom = GEOSGeometry(json.dumps(feature['geometry']))
-            Location.objects.create(
+
+            # Create the location object
+            location = Location.objects.create(
                 name=name,
                 point=geom if geom.geom_type == 'Point' else None,
                 shape=geom if geom.geom_type != 'Point' else None,
-                rtsp=rtsp,  # Save RTSP link
-                user=request.user  # Associate with the logged-in user
+                user=request.user
             )
-        return JsonResponse({'message': 'Data saved!'})
+
+            # Create a camera linked to that location
+            Camera.objects.create(
+                stream_id=rtsp,
+                location=location  # ForeignKey link
+                # name will auto-generate if blank (from model logic)
+            )
+
+        return JsonResponse({'message': 'Location and camera saved!'})
+
     return JsonResponse({'message': 'Invalid request'}, status=400)
 
 def history_view(request):
-    hist= Location.objects.filter(user=request.user).order_by('-created_at')
+    hist= Location.objects.filter(user=request.user).order_by('-created_at').prefetch_related('cameras')
     return render(request, 'Gis/history.html', {'history': hist})
 
 

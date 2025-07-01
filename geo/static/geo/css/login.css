@@ -7,17 +7,22 @@
             height: 100vh;
         }
         .login-container {
-            background: #fff;
-            padding: 2rem 2.5rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            width: 100%;
-            max-width: 350px;
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.25) 0%, 
+                rgba(255, 255, 255, 0.1) 100%);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            padding: 2rem;
+            color: white;
+            box-shadow: 0 8px 32px 0 rgba(11, 230, 95, 0.37);
+
         }
         .login-container h2 {
             margin-bottom: 1.5rem;
             text-align: center;
-            color: #355c3a;
+            color: #f9fcfa;
         }
         .form-group {
             margin-bottom: 1.2rem;
@@ -25,13 +30,18 @@
         label {
             display: block;
             margin-bottom: 0.4rem;
-            color: #333;
+            color: #f6f6f6;
         }
-        input[type="text"], input[type="password"] {
+        input[type="text"], input[type="password"] ,input[type="email"] {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1rem;
+            color: white;
             width: 100%;
-            padding: 0.6rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            margin: 0.5rem 0;
             font-size: 1rem;
         }
         button {
@@ -65,4 +75,25 @@
             margin-top: 0.5rem;
             text-align: center;
         }
+        #bg-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: -1;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: -1;
+        }
+
+
         

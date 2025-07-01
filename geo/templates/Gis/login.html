@@ -1,15 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Login</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'geo/css/login.css' %}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
+{% extends "Gis/welcome.html" %}
+{% load static %}
 
-</head>
-<body>
+{% block title %}Login{% endblock %}
+
+{% block content %}
     <div class="login-container">
         <h2>Login</h2>
         {%if error%}
@@ -32,5 +26,5 @@
         </form>
         <a class="register-link" href="{%url 'register' %}">Don't have an account? Register</a>
     </div>
-</body>
-</html>
+{%endblock%}
+

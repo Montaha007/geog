@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -39,10 +40,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.gis', # GIS support
     'geo',  # Your GIS app
+    'cams',  # Your camera app
     'leaflet',  # Leaflet for GIS mapping
 ]
+ASGI_APPLICATION = "your_project.asgi.application"
 
 MIDDLEWARE = [
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -51,6 +55,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend']
 
 ROOT_URLCONF = 'mysite.urls'

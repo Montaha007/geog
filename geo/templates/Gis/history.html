@@ -1,6 +1,8 @@
 {% extends "Gis/home.html" %}
 {% load static %}
 
+
+
 {% block title %}History View{% endblock %}
 
 {% block content %}
@@ -71,7 +73,6 @@
                     data-date="{{ loc.created_at|date:'Y-m-d' }}"
                     data-created="{{ loc.created_at|date:'c' }}">
                     
-                    <!-- Map with rounded corners -->
                     <div id="map-{{ loc.id }}" class="history-map rounded-top" style="height: 200px;"></div>
                     
                     <div class="card-body d-flex flex-column">
@@ -111,6 +112,16 @@
                             {% endif %}
                         </div>
                         
+                        {# Camera stream buttons for each camera at this location #}
+                        {% if loc.cameras.all %}
+                            {% for camera in loc.cameras.all %}
+                                {% if camera.stream_id %}
+                                <button class="btn btn-sm btn-warning live-stream-btn mt-2" data-rtsp="{{ camera.stream_id }}">
+                                    <i class="fas fa-video me-1"></i>Camera: {{ camera.name }}
+                                </button>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
                         <div class="mt-auto pt-2 border-top">
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-outline-primary dropdown-toggle w-100 d-flex align-items-center justify-content-center" 
@@ -157,7 +168,6 @@
     </div>
 </div>
 
-<!-- Modal for Live Stream -->
 <div class="modal fade" id="liveStreamModal" tabindex="-1" aria-labelledby="liveStreamModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
@@ -166,8 +176,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body" id="liveStreamContainer">
-        <!-- Stream will be loaded here -->
-      </div>
+        </div>
     </div>
   </div>
 </div>
@@ -177,8 +186,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-<script src="{% static 'geo/js/history.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     // Initialize maps
@@ -206,17 +214,40 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Live Stream modal logic
     document.querySelectorAll('.live-stream-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
             const rtsp = this.dataset.rtsp;
-            document.getElementById('liveStreamContainer').innerHTML = `
-                <iframe src="${rtsp}" width="100%" height="400" frameborder="0" allowfullscreen></iframe>
-            `;
-            var modal = new bootstrap.Modal(document.getElementById('liveStreamModal'));
-            modal.show();
+            const modalEl = document.getElementById('liveStreamModal');
+            const container = document.getElementById('liveStreamContainer');
+
+            if (window.parent && typeof window.parent.hideAllOverlays === 'function') {
+                window.parent.hideAllOverlays();
+            } else if (typeof hideAllOverlays === 'function') {
+                 hideAllOverlays();
+            }
+
+            container.innerHTML = '';
+            let modal;
+            if (window.bootstrap && window.bootstrap.Modal) {
+                modal = window.bootstrap.Modal.getOrCreateInstance(modalEl);
+            } else if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            }
+            if (modal) {
+                modal.show();
+                setTimeout(function() {
+                    container.innerHTML = `<div style='width:100%;display:flex;justify-content:center;align-items:center;'><iframe src="${rtsp}" style="width:100%;max-width:720px;height:400px;display:block;border:none;background:#000;border-radius:12px;box-shadow:0 2px 16px rgba(0,0,0,0.15);" allowfullscreen></iframe></div>`;
+                }, 300);
+                const cleanup = function() {
+                    container.innerHTML = '';
+                    modalEl.removeEventListener('hidden.bs.modal', cleanup);
+                };
+                modalEl.addEventListener('hidden.bs.modal', cleanup);
+            }
         });
     });
 
-    // Search functionality (same as before)
+    // Search functionality
     const searchInput = document.getElementById('searchInput');
     const categoryFilter = document.getElementById('categoryFilter');
     const searchBtn = document.getElementById('searchBtn');
@@ -258,7 +289,6 @@ document.addEventListener("DOMContentLoaded", function () {
             if (matchesSearch && matchesCategory) {
                 item.style.display = 'block';
                 visibleCount++;
-                
                 if (searchTerm) {
                     const titleEl = item.querySelector('.card-title');
                     titleEl.innerHTML = highlightText(titleEl.textContent, searchTerm);
@@ -271,11 +301,11 @@ document.addEventListener("DOMContentLoaded", function () {
         updateResultsCount(visibleCount, historyItems.length);
         
         if (visibleCount === 0 && (searchTerm || selectedCategory !== 'all')) {
-            noResults && (noResults.style.display = 'block');
-            historyList && (historyList.style.display = 'none');
+            if (noResults) noResults.style.display = 'block';
+            if (historyList) historyList.style.display = 'none';
         } else {
-            noResults && (noResults.style.display = 'none');
-            historyList && (historyList.style.display = 'block');
+            if (noResults) noResults.style.display = 'none';
+            if (historyList) historyList.style.display = 'block';
         }
     }
 
@@ -289,12 +319,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Event listeners
-    searchBtn.addEventListener('click', performSearch);
-    clearBtn.addEventListener('click', clearSearch);
-    searchInput.addEventListener('input', performSearch);
-    categoryFilter.addEventListener('change', performSearch);
-    
-    searchInput.addEventListener('keypress', function(e) {
+    if (searchBtn) searchBtn.addEventListener('click', performSearch);
+    if (clearBtn) clearBtn.addEventListener('click', clearSearch);
+    if (searchInput) searchInput.addEventListener('input', performSearch);
+    if (categoryFilter) categoryFilter.addEventListener('change', performSearch);
+    if (searchInput) searchInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             performSearch();
         }
@@ -305,14 +334,11 @@ document.addEventListener("DOMContentLoaded", function () {
         btn.addEventListener('click', function() {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-            
             const filter = this.dataset.filter;
             const now = new Date();
-            
             historyItems.forEach(item => {
                 const itemDate = new Date(item.dataset.created);
                 let shouldShow = true;
-                
                 switch(filter) {
                     case 'today':
                         shouldShow = itemDate.toDateString() === now.toDateString();
@@ -326,10 +352,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         shouldShow = itemDate >= monthAgo;
                         break;
                 }
-                
                 item.style.display = shouldShow ? 'block' : 'none';
             });
-            
             const visibleItems = Array.from(historyItems).filter(item => 
                 item.style.display !== 'none'
             ).length;
