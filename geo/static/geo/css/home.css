@@ -363,4 +363,14 @@
             background: var(--primary-medium);
             border-radius: 3px;
         }
-              
+        .footer {
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: var(--primary-dark);
+            text-align: center;
+            padding: 1rem;
+            font-size: 0.875rem;
+            box-shadow: var(--shadow-light);
+            color: var(--text-light); /* Add this line */
+        }

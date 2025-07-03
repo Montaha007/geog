@@ -16,3 +16,10 @@ def add_camera(request, location_id):
         return redirect('location')  # change to your actual map or success view
 
     return redirect('location')  # fallback
+from django.http import JsonResponse
+
+@login_required
+def record_view(request, camera_id):
+    camera = get_object_or_404(Camera, pk=camera_id)
+    output_path = camera.record_clip(duration=10)
+    return JsonResponse({"status": "started", "path": output_path})

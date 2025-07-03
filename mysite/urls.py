@@ -20,4 +20,5 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('geo.urls')),  # Include the geo app URLs
+    path('cams/', include('cams.urls')),  
 ]

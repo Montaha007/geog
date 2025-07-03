@@ -11,21 +11,47 @@ from django.contrib.auth.models import User
 
 @login_required(login_url='/login/')
 def location(request):
-    return render(request, 'Gis/map.html')
+    user_location = Location.objects.filter(user=request.user)
 
+    location_json = {
+        loc.id: {
+            'name': loc.name,
+            'point': [loc.point.y, loc.point.x] if loc.point else None,
+            'shape': json.loads(loc.shape.geojson)['coordinates'] if loc.shape else None
+        }
+        for loc in user_location
+    }
+
+    return render(request, 'Gis/map.html', {
+        'user_location': user_location,
+        'location_json': json.dumps(location_json)  # safe string
+    })
 
 @csrf_exempt
 def save_geojson(request):
-    if request.method == 'POST':
+    if request.method != 'POST':
+        return JsonResponse({'message': 'Invalid request'}, status=400)
+
+    if not request.user.is_authenticated:
+        return JsonResponse({'message': 'Authentication required'}, status=401)
+
+    try:
         data = json.loads(request.body)
         features = data.get('features', [])
         name = data.get('name', 'Drawn Shape')
-        rtsp = data.get('rtsp', '')  # Get RTSP link
+        rtsp = data.get('rtsp', '').strip()
+        stream_id = data.get('stream_id', '').strip()
+
+        if not features:
+            return JsonResponse({'message': 'No features found in request.'}, status=400)
 
         for feature in features:
-            geom = GEOSGeometry(json.dumps(feature['geometry']))
+            geometry = feature.get('geometry')
+            if not geometry:
+                continue  # Skip malformed features
 
-            # Create the location object
+            geom = GEOSGeometry(json.dumps(geometry))
+
             location = Location.objects.create(
                 name=name,
                 point=geom if geom.geom_type == 'Point' else None,
@@ -33,22 +59,25 @@ def save_geojson(request):
                 user=request.user
             )
 
-            # Create a camera linked to that location
-            Camera.objects.create(
-                stream_id=rtsp,
-                location=location  # ForeignKey link
-                # name will auto-generate if blank (from model logic)
-            )
+            if rtsp:
+                Camera.objects.create(
+                    stream_id=stream_id,  # Unique identifier for go2rtc or FFmpeg
+                    rtsp_url=rtsp,  # Needed for FFmpeg or go2rtc hybrid
+                    location=location
+                    # Name will auto-generate in model's save() if blank
+                )
 
-        return JsonResponse({'message': 'Location and camera saved!'})
+        return JsonResponse({'message': 'Location and camera saved successfully!'})
 
-    return JsonResponse({'message': 'Invalid request'}, status=400)
+    except json.JSONDecodeError:
+        return JsonResponse({'message': 'Invalid JSON.'}, status=400)
+
+    except Exception as e:
+        return JsonResponse({'message': f'Error: {str(e)}'}, status=500)
 
 def history_view(request):
     hist= Location.objects.filter(user=request.user).order_by('-created_at').prefetch_related('cameras')
     return render(request, 'Gis/history.html', {'history': hist})
-
-
 
 def login_view(request):
     if request.method == 'POST':

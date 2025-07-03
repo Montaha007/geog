@@ -13,7 +13,15 @@
     position: relative;
     overflow: hidden;
      display: flex;
-    height: 100vh;
+    height: 80vh;
+}
+#userLocationsList.dropdown-menu {
+    z-index: 5000 !important;
+    position: absolute !important;
+}
+.dropdown {
+    position: relative;
+    z-index: 4999;
 }
 
 #map:hover {

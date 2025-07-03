@@ -116,9 +116,10 @@
                         {% if loc.cameras.all %}
                             {% for camera in loc.cameras.all %}
                                 {% if camera.stream_id %}
-                                <button class="btn btn-sm btn-warning live-stream-btn mt-2" data-rtsp="{{ camera.stream_id }}">
+                                <button class="btn btn-sm btn-warning live-stream-btn mt-2" data-stream-url="{{ camera.get_stream_url }}">
                                     <i class="fas fa-video me-1"></i>Camera: {{ camera.name }}
                                 </button>
+
                                 {% endif %}
                             {% endfor %}
                         {% endif %}
@@ -216,37 +217,39 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll('.live-stream-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
-            const rtsp = this.dataset.rtsp;
-            const modalEl = document.getElementById('liveStreamModal');
+            const streamUrl = this.dataset.streamUrl;
             const container = document.getElementById('liveStreamContainer');
+            container.innerHTML = '';  // clear old
 
-            if (window.parent && typeof window.parent.hideAllOverlays === 'function') {
-                window.parent.hideAllOverlays();
-            } else if (typeof hideAllOverlays === 'function') {
-                 hideAllOverlays();
-            }
+            // For WebRTC iframe:
+            container.innerHTML = `
+            <iframe
+                src="${streamUrl}"
+                style="width:100%;max-width:720px;height:400px;
+                    border:none;border-radius:12px;box-shadow:0 2px 16px rgba(0,0,0,0.15);"
+                allowfullscreen>
+            </iframe>`;
 
+            // If you’d rather use HLS in a <video> tag:
+            // container.innerHTML = `
+            //   <video controls autoplay muted
+            //     style="width:100%;max-width:720px;height:400px;border-radius:12px;">
+            //     <source src="${streamUrl}" type="application/x-mpegURL">
+            //   </video>`;
+            
+            // Show the modal…
+            const modalEl = document.getElementById('liveStreamModal');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+
+            // Clean up on close:
+            modalEl.addEventListener('hidden.bs.modal', () => {
             container.innerHTML = '';
-            let modal;
-            if (window.bootstrap && window.bootstrap.Modal) {
-                modal = window.bootstrap.Modal.getOrCreateInstance(modalEl);
-            } else if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-            }
-            if (modal) {
-                modal.show();
-                setTimeout(function() {
-                    container.innerHTML = `<div style='width:100%;display:flex;justify-content:center;align-items:center;'><iframe src="${rtsp}" style="width:100%;max-width:720px;height:400px;display:block;border:none;background:#000;border-radius:12px;box-shadow:0 2px 16px rgba(0,0,0,0.15);" allowfullscreen></iframe></div>`;
-                }, 300);
-                const cleanup = function() {
-                    container.innerHTML = '';
-                    modalEl.removeEventListener('hidden.bs.modal', cleanup);
-                };
-                modalEl.addEventListener('hidden.bs.modal', cleanup);
-            }
+            }, { once: true });
         });
-    });
+        });
 
+    
     // Search functionality
     const searchInput = document.getElementById('searchInput');
     const categoryFilter = document.getElementById('categoryFilter');
