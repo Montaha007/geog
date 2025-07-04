@@ -1,42 +1,64 @@
-from django.shortcuts import render ,redirect
-from django.contrib.auth import authenticate, login,logout
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login, logout
 import json
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.gis.geos import GEOSGeometry
 from .models import Location
 from cams.models import Camera
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.shortcuts import get_object_or_404
+from asgiref.sync import sync_to_async
+import traceback
+
 
 @login_required(login_url='/login/')
-def location(request):
-    user_location = Location.objects.filter(user=request.user)
+async def location(request):
+    # Use sync_to_async for ORM query
+    user_location = await sync_to_async(
+        lambda: list(Location.objects.filter(user=request.user))
+    )()
 
-    location_json = {
-        loc.id: {
+    location_json = {}
+    for loc in user_location:
+        point_coords = [loc.point.y, loc.point.x] if loc.point else None
+        # Accessing .geojson property might trigger a synchronous operation, wrap it
+        shape_geojson = await sync_to_async(
+            lambda: loc.shape.geojson if loc.shape else None
+        )()
+        shape_coords = json.loads(shape_geojson)['coordinates'] if shape_geojson else None
+
+        location_json[loc.id] = {
             'name': loc.name,
-            'point': [loc.point.y, loc.point.x] if loc.point else None,
-            'shape': json.loads(loc.shape.geojson)['coordinates'] if loc.shape else None
+            'point': point_coords,
+            'shape': shape_coords
         }
-        for loc in user_location
-    }
 
-    return render(request, 'Gis/map.html', {
+    return await sync_to_async(render)(request, 'Gis/map.html', {
         'user_location': user_location,
-        'location_json': json.dumps(location_json)  # safe string
+        'location_json': json.dumps(location_json)
     })
 
 @csrf_exempt
-def save_geojson(request):
+async def save_geojson(request):
     if request.method != 'POST':
         return JsonResponse({'message': 'Invalid request'}, status=400)
 
-    if not request.user.is_authenticated:
+    # ✅ Safely get the user object
+    user = await sync_to_async(lambda: request.user)()
+    is_authenticated = await sync_to_async(lambda: user.is_authenticated)()
+    if not is_authenticated:
         return JsonResponse({'message': 'Authentication required'}, status=401)
 
     try:
-        data = json.loads(request.body)
+    # ✅ FIXED: do NOT await request.body
+        body = request.body
+
+    # ✅ still wrap json.loads, since it's CPU-bound
+        data = await sync_to_async(json.loads)(body)
+
+
         features = data.get('features', [])
         name = data.get('name', 'Drawn Shape')
         rtsp = data.get('rtsp', '').strip()
@@ -48,23 +70,24 @@ def save_geojson(request):
         for feature in features:
             geometry = feature.get('geometry')
             if not geometry:
-                continue  # Skip malformed features
+                continue
 
-            geom = GEOSGeometry(json.dumps(geometry))
+            # ✅ wrap GEOSGeometry creation
+            geom = await sync_to_async(GEOSGeometry)(json.dumps(geometry))
 
-            location = Location.objects.create(
+            # ✅ ORM create (wrapped)
+            location = await sync_to_async(Location.objects.create)(
                 name=name,
                 point=geom if geom.geom_type == 'Point' else None,
                 shape=geom if geom.geom_type != 'Point' else None,
-                user=request.user
+                user=user
             )
 
             if rtsp:
-                Camera.objects.create(
-                    stream_id=stream_id,  # Unique identifier for go2rtc or FFmpeg
-                    rtsp_url=rtsp,  # Needed for FFmpeg or go2rtc hybrid
+                await sync_to_async(Camera.objects.create)(
+                    stream_id=stream_id,
+                    rtsp_url=rtsp,
                     location=location
-                    # Name will auto-generate in model's save() if blank
                 )
 
         return JsonResponse({'message': 'Location and camera saved successfully!'})
@@ -73,71 +96,95 @@ def save_geojson(request):
         return JsonResponse({'message': 'Invalid JSON.'}, status=400)
 
     except Exception as e:
+    # Log the full traceback in the console
+        print("🔥 FULL ERROR TRACEBACK 🔥")
+        traceback.print_exc()
+
+    # Return the actual error string to the browser
         return JsonResponse({'message': f'Error: {str(e)}'}, status=500)
+async def history_view(request):
+    # Wrap ORM query
+    hist = await sync_to_async(
+        lambda: list(Location.objects.filter(user=request.user)
+                     .order_by('-created_at')
+                     .prefetch_related('cameras'))
+    )()
+    return await sync_to_async(render)(request, 'Gis/history.html', {'history': hist})
 
-def history_view(request):
-    hist= Location.objects.filter(user=request.user).order_by('-created_at').prefetch_related('cameras')
-    return render(request, 'Gis/history.html', {'history': hist})
-
-def login_view(request):
+async def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-        user = authenticate(request, username=username, password=password)
+        # Wrap authenticate
+        user = await sync_to_async(authenticate)(request, username=username, password=password)
         if user is not None:
-            login(request, user)
-            return redirect('location')  # Redirect to your map view
+            # Wrap login
+            await sync_to_async(login)(request, user)
+            return redirect('location')
         else:
-            return render(request, 'Gis/login.html', {'error': 'Invalid credentials'})
-    return render(request, 'Gis/login.html')
+            return await sync_to_async(render)(request, 'Gis/logins/login.html', {'error': 'Invalid credentials'})
+    return await sync_to_async(render)(request, 'Gis/logins/login.html')
 
-def logout_view(request):
+async def logout_view(request):
     if request.method == 'POST':
-        logout(request)
+        # Wrap logout
+        await sync_to_async(logout)(request)
         return redirect('login')
+    # If not POST, just redirect to login (or return an error)
+    return redirect('login') # Or render an error page
 
-def register_view(request):
+async def register_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         email = request.POST.get('email')
         password1 = request.POST.get('password1')
         password2 = request.POST.get('password2')
-        if User.objects.filter(username=username).exists():
-            return render(request, 'Gis/register.html', {'error': 'Username already exists'})
+
+        # Wrap ORM query
+        username_exists = await sync_to_async(User.objects.filter(username=username).exists)()
+        if username_exists:
+            return await sync_to_async(render)(request, 'Gis/logins/register.html', {'error': 'Username already exists'})
         if password1 != password2:
-            return render(request, 'Gis/register.html', {'error': 'Passwords do not match'})
-        user = User.objects.create_user(username=username, email=email, password=password1)
-        # Optional: make sure user is active
+            return await sync_to_async(render)(request, 'Gis/logins/register.html', {'error': 'Passwords do not match'})
+        
+        # Wrap ORM create_user
+        user = await sync_to_async(User.objects.create_user)(username=username, email=email, password=password1)
+        
+        # Wrap user.save()
         user.is_active = True
-        user.save()
+        await sync_to_async(user.save)()
 
-        user = authenticate(request, username=username, password=password1)
+        # Wrap authenticate and login
+        user = await sync_to_async(authenticate)(request, username=username, password=password1)
         if user is not None:
-            login(request, user)
-            return redirect('location')  # Redirect to your map view
+            await sync_to_async(login)(request, user)
+            return redirect('location')
         else:
-            return render(request, 'Gis/register.html', {'error': 'Authentication failed after registration'})
-    return render(request, 'Gis/register.html')
+            return await sync_to_async(render)(request, 'Gis/logins/register.html', {'error': 'Authentication failed after registration'})
+    return await sync_to_async(render)(request, 'Gis/logins/register.html')
 
 
+async def download_location(request, pk):
+    # Wrap get_object_or_404
+    loc = await sync_to_async(get_object_or_404)(Location, pk=pk)
 
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import get_object_or_404, redirect
-
-def download_location(request, pk):
-    loc = get_object_or_404(Location, pk=pk)
+    geojson = '{}'
     if loc.shape:
-        geojson = loc.shape.geojson
+        # Wrap access to .geojson
+        geojson = await sync_to_async(lambda: loc.shape.geojson)()
     elif loc.point:
-        geojson = loc.point.geojson
-    else:
-        geojson = '{}'
+        # Wrap access to .geojson
+        geojson = await sync_to_async(lambda: loc.point.geojson)()
+
     response = HttpResponse(geojson, content_type='application/geo+json')
     response['Content-Disposition'] = f'attachment; filename="{loc.name}.geojson"'
     return response
-def delete_location(request, pk):
-    loc = get_object_or_404(Location, pk=pk)
+
+async def delete_location(request, pk):
+    # Wrap get_object_or_404
+    loc = await sync_to_async(get_object_or_404)(Location, pk=pk)
     if request.method == 'POST':
-        loc.delete()
-        return redirect('history')  # Use the correct URL name for your history page
-    return redirect('history')
+        # Wrap delete operation
+        await sync_to_async(loc.delete)()
+        return redirect('history')
+    return redirect('history') # If not POST, just redirect

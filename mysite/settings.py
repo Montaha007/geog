@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     'cams',  # Your camera app
     'leaflet',  # Leaflet for GIS mapping
 ]
-ASGI_APPLICATION = "your_project.asgi.application"
+ASGI_APPLICATION = "mysite.asgi.application"
 
 MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',

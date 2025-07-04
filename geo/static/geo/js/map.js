@@ -9,11 +9,11 @@ map.addLayer(drawnItems);
 
 var LeafIcon = L.Icon.extend({
     options: {
-        iconSize:     [32, 32],        // Square size for camera icon
-        shadowSize:   [32, 32],        // Match icon size
-        iconAnchor:   [16, 16],        // Center the icon
-        shadowAnchor: [16, 16],        // Center the shadow
-        popupAnchor:  [0, -16],        // Popup appears above icon
+        iconSize:     [32, 32],       // Square size for camera icon
+        shadowSize:   [32, 32],       // Match icon size
+        iconAnchor:   [16, 16],       // Center the icon
+        shadowAnchor: [16, 16],       // Center the shadow
+        popupAnchor:  [0, -16],       // Popup appears above icon
         shadowUrl:    ''
     }
 });
@@ -93,26 +93,50 @@ map.on('draw:created', function (e) {
             var name = document.getElementById('popup-shape-name').value || 'Unnamed';
             var rtsp = document.getElementById('popup-rtsp-link').value || '';
             var streamId = document.getElementById('popup-stream-id').value || '';
-            var geojson = drawnItems.toGeoJSON();
-            geojson.name = name;
-            geojson.rtsp = rtsp;
-            geojson.stream_id = streamId;
+            
+            // Get GeoJSON for the specific layer. This will be a GeoJSON Feature.
+            var layerGeoJSON = layer.toGeoJSON();
+            
+            // --- FIX IS HERE: Construct the data object exactly as your Django view expects ---
+            var dataToSend = {
+                name: name,
+                rtsp: rtsp,
+                stream_id: streamId,
+                features: [layerGeoJSON] // Wrap the single Feature in an array as expected by Django
+            };
+
+            console.log("Sending data to server:", dataToSend); // Log the payload for debugging
+
             fetch('/geo/save/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCookie('csrftoken')
                 },
-                body: JSON.stringify(geojson)
+                body: JSON.stringify(dataToSend) // Send the correctly structured dataToSend object
             })
-            .then(response => response.json())
+            .then(response => {
+                // Check if the response was OK (status 200-299)
+                if (!response.ok) {
+                    // Try to parse the error message from the server response
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.message || `Server responded with status ${response.status}`);
+                    }).catch(() => {
+                        // Fallback for non-JSON error responses (e.g., raw HTML 500 error page)
+                        throw new Error(`Server error: ${response.status} ${response.statusText}. Check server console for traceback.`);
+                    });
+                }
+                return response.json();
+            })
             .then(result => {
                 alert(result.message);
                 layer.closePopup();
+                // Consider reloading the page or updating the list of locations to show the new one
+                // window.location.reload(); 
             })
             .catch(error => {
-                console.error(error);
-                alert("Failed to save.");
+                console.error("Fetch error:", error);
+                alert("Failed to save. Error: " + error.message); // Show a more specific error
             });
         };
     }, 100);
