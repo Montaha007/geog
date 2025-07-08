@@ -94,6 +94,7 @@ async def save_geojson(request):
 
     except json.JSONDecodeError:
         return JsonResponse({'message': 'Invalid JSON.'}, status=400)
+    
 
     except Exception as e:
     # Log the full traceback in the console
@@ -102,6 +103,8 @@ async def save_geojson(request):
 
     # Return the actual error string to the browser
         return JsonResponse({'message': f'Error: {str(e)}'}, status=500)
+    await channel_layer.group_send("map_updates", update_data)
+
 async def history_view(request):
     # Wrap ORM query
     hist = await sync_to_async(

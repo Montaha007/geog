@@ -365,5 +365,26 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     updateResultsCount(historyItems.length, historyItems.length);
 });
+const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+const wsPath = `${wsScheme}://${window.location.host}/ws/map/`;
+const historySocket = new WebSocket(wsPath);
+
+historySocket.onopen = function() {
+    console.log("WebSocket connected on history page!");
+};
+
+historySocket.onmessage = function(event) {
+    const data = JSON.parse(event.data);
+    console.log("History page received:", data);
+    // TODO: Update the history list if needed
+};
+
+historySocket.onclose = function(event) {
+    console.log("WebSocket closed on history page.");
+};
+
+historySocket.onerror = function(error) {
+    console.error("WebSocket error on history page:", error);
+};
 </script>
 {% endblock %}

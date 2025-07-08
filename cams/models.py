@@ -22,19 +22,15 @@ class Camera(models.Model):
     def get_stream_url(self):
         return f"http://localhost:1984/stream.html?src={self.stream_id}"
 
-    # ✅ Stream URL (go2rtc live streaming)
     def get_go2rtc_url(self):
         return f"http://localhost:1984/api/streams/{self.stream_id}"
 
-    # ✅ Web player iframe embed (if using go2rtc's built-in player)
     def get_go2rtc_iframe_url(self):
         return f"http://localhost:1984/streams/{self.stream_id}"
 
-    # ✅ HLS URL (for <video> tag + hls.js)
     def get_hls_url(self):
         return f"http://localhost:1984/api/streams/{self.stream_id}.m3u8"
 
-    # ✅ Optional FFmpeg recording
 
 
     def record_clip(self, duration=10):

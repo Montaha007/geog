@@ -217,3 +217,27 @@ function clearMap() {
     activeLayers.forEach(layer => map.removeLayer(layer));
     activeLayers = [];
 }
+// Connect to the WebSocket
+const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+const wsPath = `${wsScheme}://${window.location.host}/ws/map/`;
+const mapSocket = new WebSocket(wsPath);
+
+mapSocket.onopen = function() {
+    console.log("WebSocket connection established!");
+    // Optionally send a message to the server
+    mapSocket.send(JSON.stringify({type: "hello", data: "Hi server!"}));
+};
+
+mapSocket.onmessage = function(event) {
+    const data = JSON.parse(event.data);
+    console.log("Received from server:", data);
+    // Handle incoming messages here
+};
+
+mapSocket.onclose = function(event) {
+    console.log("WebSocket closed:", event);
+};
+
+mapSocket.onerror = function(error) {
+    console.error("WebSocket error:", error);
+};
