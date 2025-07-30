@@ -101,7 +101,7 @@ map.on('draw:created', function (e) {
             var dataToSend = {
                 name: name,
                 rtsp: rtsp,
-                stream_id: streamId,
+                camera_id: cameraID,
                 features: [layerGeoJSON] // Wrap the single Feature in an array as expected by Django
             };
 

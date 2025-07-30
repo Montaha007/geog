@@ -1,0 +1,422 @@
+{% extends "Gis/home.html" %}
+{% load static %}
+
+{% block title %}Alert Manager Demo{% endblock %}
+{% block page_title %}Professional Alert Manager Demo{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'geo/css/fire_alerts.css' %}">
+<link rel="stylesheet" href="{% static 'geo/css/alert_manager.css' %}">
+<style>
+    .demo-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .demo-section {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+    
+    .demo-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    
+    .demo-controls {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .control-card {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .control-card h5 {
+        color: #495057;
+        margin-bottom: 15px;
+    }
+    
+    .status-display {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+    }
+    
+    .status-card {
+        background: linear-gradient(135deg, #6c757d, #495057);
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+    }
+    
+    .status-number {
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 1;
+        margin-bottom: 5px;
+    }
+    
+    .status-label {
+        font-size: 14px;
+        opacity: 0.9;
+    }
+    
+    .demo-info {
+        background: linear-gradient(135deg, #17a2b8, #138496);
+        color: white;
+        border-radius: 8px;
+        padding: 25px;
+        margin-bottom: 30px;
+    }
+    
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 30px;
+    }
+    
+    .feature-card {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 20px;
+    }
+    
+    .feature-icon {
+        font-size: 24px;
+        margin-bottom: 15px;
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="demo-container">
+    <!-- Demo Header -->
+    <div class="demo-header">
+        <h1 class="display-4 text-danger">
+            <i class="fas fa-fire me-3"></i>
+            Professional Alert Manager Demo
+        </h1>
+        <p class="lead text-muted">
+            Experience the advanced fire detection alert management system
+        </p>
+    </div>
+
+    <!-- Demo Information -->
+    <div class="demo-info">
+        <h4><i class="fas fa-info-circle me-2"></i>Demo Instructions</h4>
+        <p class="mb-0">
+            Use the controls below to test the professional alert manager. The red "Alerts" button will appear in the top-right corner. 
+            Try generating test alerts, exploring the sliding panel, and testing different features!
+        </p>
+    </div>
+
+    <!-- Demo Controls -->
+    <div class="demo-section">
+        <h3 class="text-center mb-4">Demo Controls</h3>
+        
+        <div class="demo-controls">
+            <div class="control-card">
+                <h5><i class="fas fa-vial text-warning"></i> Test Alerts</h5>
+                <button id="demo-test-alert" class="btn btn-warning mb-2 w-100">
+                    Generate Test Alert
+                </button>
+                <button id="demo-multiple-alerts" class="btn btn-outline-warning w-100">
+                    Generate 5 Alerts
+                </button>
+            </div>
+
+            <div class="control-card">
+                <h5><i class="fas fa-cog text-primary"></i> Panel Controls</h5>
+                <button id="demo-open-panel" class="btn btn-primary mb-2 w-100">
+                    Open Alert Panel
+                </button>
+                <button id="demo-close-panel" class="btn btn-outline-primary w-100">
+                    Close Alert Panel
+                </button>
+            </div>
+
+            <div class="control-card">
+                <h5><i class="fas fa-volume-up text-success"></i> Sound & Notifications</h5>
+                <button id="demo-test-sound" class="btn btn-success mb-2 w-100">
+                    Test Alert Sound
+                </button>
+                <button id="demo-test-notification" class="btn btn-outline-success w-100">
+                    Test Browser Notification
+                </button>
+            </div>
+
+            <div class="control-card">
+                <h5><i class="fas fa-download text-info"></i> Data Management</h5>
+                <button id="demo-export-alerts" class="btn btn-info mb-2 w-100">
+                    Export Alert Data
+                </button>
+                <button id="demo-clear-alerts" class="btn btn-outline-danger w-100">
+                    Clear All Alerts
+                </button>
+            </div>
+        </div>
+
+        <!-- Status Display -->
+        <div class="status-display">
+            <div class="status-card">
+                <div class="status-number" id="demo-total-alerts">0</div>
+                <div class="status-label">Total Alerts</div>
+            </div>
+            <div class="status-card">
+                <div class="status-number" id="demo-active-alerts">0</div>
+                <div class="status-label">Active Alerts</div>
+            </div>
+            <div class="status-card">
+                <div class="status-number" id="demo-resolved-alerts">0</div>
+                <div class="status-label">Resolved Alerts</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Showcase -->
+    <div class="demo-section">
+        <h3 class="text-center mb-4">Key Features</h3>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h5>Real-time Alerts</h5>
+                <p class="text-muted">
+                    Instant fire detection notifications with WebSocket connectivity and automatic status updates.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <h5>Priority Classification</h5>
+                <p class="text-muted">
+                    Automatic priority assignment based on confidence levels: critical (>90%), high (70-90%), medium (50-70%), low(<50%).
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-filter"></i>
+                </div>
+                <h5>Advanced Filtering</h5>
+                <p class="text-muted">
+                    Filter alerts by status, priority, and time range for efficient alert management.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <h5>Multi-Modal Notifications</h5>
+                <p class="text-muted">
+                    Sound alerts, browser notifications, toast messages, and visual indicators.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h5>Analytics & Reporting</h5>
+                <p class="text-muted">
+                    Real-time statistics, performance metrics, and exportable alert data.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h5>Responsive Design</h5>
+                <p class="text-muted">
+                    Fully responsive interface that works seamlessly on desktop and mobile devices.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keyboard Shortcuts -->
+    <div class="demo-section">
+        <h3 class="text-center mb-4">Keyboard Shortcuts</h3>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="d-flex justify-content-between border-bottom py-2">
+                    <span><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>A</kbd></span>
+                    <span>Toggle Alert Panel</span>
+                </div>
+                <div class="d-flex justify-content-between border-bottom py-2">
+                    <span><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd></span>
+                    <span>Test Alert</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex justify-content-between border-bottom py-2">
+                    <span><kbd>Escape</kbd></span>
+                    <span>Close Alert Panel</span>
+                </div>
+                <div class="d-flex justify-content-between py-2">
+                    <span><kbd>Click Outside</kbd></span>
+                    <span>Auto-close Panel</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+
+<!-- Fire Alerts System -->
+<script src="{% static 'geo/js/fire_alerts.js' %}"></script>
+<script src="{% static 'geo/js/alert_manager.js' %}"></script>
+<script src="{% static 'geo/js/fire_alerts_integration.js' %}"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait for alert manager to initialize
+    function waitForAlertManager(callback) {
+        if (window.alertManager && window.alertManager.isInitialized) {
+            callback();
+        } else {
+            setTimeout(() => waitForAlertManager(callback), 100);
+        }
+    }
+
+    waitForAlertManager(() => {
+        console.log('🎮 Demo page initialized with alert manager');
+        
+        // Demo control event listeners
+        setupDemoControls();
+        
+        // Update status display periodically
+        setInterval(updateStatusDisplay, 1000);
+    });
+
+    function setupDemoControls() {
+        // Test single alert
+        document.getElementById('demo-test-alert').addEventListener('click', () => {
+            const priorities = ['high', 'medium', 'low'];
+            const cameras = ['CAM-001', 'CAM-002', 'CAM-003', 'CAM-004', 'CAM-005'];
+            const farms = ['FARM-A', 'FARM-B', 'FARM-C'];
+            
+            const testAlert = {
+                camera_id: cameras[Math.floor(Math.random() * cameras.length)],
+                farm_id: farms[Math.floor(Math.random() * farms.length)],
+                confidence: 0.65 + Math.random() * 0.35, // 65-100%
+                timestamp: new Date().toISOString(),
+                type: 'fire_detection'
+            };
+            
+            window.alertManager.addAlert(testAlert);
+            
+            if (window.fireAlertIntegration) {
+                window.fireAlertIntegration.showToast('Test alert generated', 'success');
+            }
+        });
+
+        // Test multiple alerts
+        document.getElementById('demo-multiple-alerts').addEventListener('click', () => {
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    document.getElementById('demo-test-alert').click();
+                }, i * 500); // Stagger alerts
+            }
+        });
+
+        // Panel controls
+        document.getElementById('demo-open-panel').addEventListener('click', () => {
+            window.alertManager.toggleAlertPanel();
+        });
+
+        document.getElementById('demo-close-panel').addEventListener('click', () => {
+            window.alertManager.hideAlertPanel();
+        });
+
+        // Sound test
+        document.getElementById('demo-test-sound').addEventListener('click', () => {
+            window.alertManager.playAlertSound();
+            if (window.fireAlertIntegration) {
+                window.fireAlertIntegration.showToast('Alert sound played', 'info');
+            }
+        });
+
+        // Notification test
+        document.getElementById('demo-test-notification').addEventListener('click', async () => {
+            if (Notification.permission === 'granted') {
+                new Notification('🔥 Demo Fire Alert!', {
+                    body: 'This is a test notification from the alert manager demo',
+                    icon: '/static/geo/icons/fire.png'
+                });
+                if (window.fireAlertIntegration) {
+                    window.fireAlertIntegration.showToast('Browser notification sent', 'success');
+                }
+            } else if (Notification.permission === 'default') {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    document.getElementById('demo-test-notification').click();
+                } else {
+                    if (window.fireAlertIntegration) {
+                        window.fireAlertIntegration.showToast('Notification permission denied', 'warning');
+                    }
+                }
+            } else {
+                if (window.fireAlertIntegration) {
+                    window.fireAlertIntegration.showToast('Notifications are blocked', 'error');
+                }
+            }
+        });
+
+        // Export alerts
+        document.getElementById('demo-export-alerts').addEventListener('click', () => {
+            window.alertManager.exportAlerts();
+            if (window.fireAlertIntegration) {
+                window.fireAlertIntegration.showToast('Alert data exported', 'success');
+            }
+        });
+
+        // Clear alerts
+        document.getElementById('demo-clear-alerts').addEventListener('click', () => {
+            window.alertManager.resolveAllAlerts();
+            if (window.fireAlertIntegration) {
+                window.fireAlertIntegration.showToast('All alerts cleared', 'info');
+            }
+        });
+    }
+
+    function updateStatusDisplay() {
+        if (window.alertManager && window.alertManager.alerts) {
+            const total = window.alertManager.alerts.length;
+            const active = window.alertManager.alerts.filter(a => a.status === 'active').length;
+            const resolved = window.alertManager.alerts.filter(a => a.status === 'resolved').length;
+
+            document.getElementById('demo-total-alerts').textContent = total;
+            document.getElementById('demo-active-alerts').textContent = active;
+            document.getElementById('demo-resolved-alerts').textContent = resolved;
+        }
+    }
+});
+</script>
+{% endblock %}

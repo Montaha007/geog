@@ -1,5 +1,5 @@
-{% load static %}
-<!DOCTYPE html>
+
+<DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -14,10 +14,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Custom CSS -->
+    {% load static %}
     <link rel="stylesheet" href="{% static 'geo/css/home.css' %}">
     <link rel="stylesheet" href="{% static 'geo/css/map.css' %}">
     <link rel="stylesheet" href="{% static 'geo/css/history.css' %}">
+    <!--fire detection -->
+    <link rel="stylesheet" href="{% static 'geo/css/alert_manager.css' %}">
+    <link rel="stylesheet" href="{% static 'geo/css/fire_alerts.css' %}">
     
+    {% block extra_css %}{% endblock %}
+
 
 </head>
 <body>
@@ -62,6 +68,18 @@
                     <span class="nav-text">Location History</span>
                 </a>
             </div>
+            <div class="nav-item">
+                <a href="{% url 'fire_alerts_dashboard' %}" class="nav-link" id="alertsLink">
+                    <i class="nav-icon fas fa-fire text-danger"></i>
+                    <span class="nav-text">Fire Alerts</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'alert_demo' %}" class="nav-link" id="demoLink">
+                    <i class="nav-icon fas fa-vial text-warning"></i>
+                    <span class="nav-text">Alert Demo</span>
+                </a>
+            </div>
         </div>
 
         <div class="logout-section">
@@ -89,6 +107,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     <script src="{% static 'geo/js/home.js' %}"></script>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
 
     {% block scripts %}{% endblock %}
 </body>

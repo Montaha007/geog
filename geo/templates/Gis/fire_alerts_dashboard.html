@@ -1,0 +1,582 @@
+{% extends "Gis/home.html" %}
+{% load static %}
+
+{% block title %}Fire Alerts Dashboard{% endblock %}
+{% block page_title %}Fire Detection Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'geo/css/fire_alerts.css' %}">
+<link rel="stylesheet" href="{% static 'geo/css/alert_manager.css' %}">
+<style>
+    .dashboard-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        padding: 25px;
+        text-align: center;
+        border-left: 4px solid #dc3545;
+    }
+    
+    .stat-number {
+        font-size: 36px;
+        font-weight: 700;
+        color: #dc3545;
+        line-height: 1;
+        margin-bottom: 10px;
+    }
+    
+    .stat-label {
+        font-size: 16px;
+        color: #6c757d;
+        font-weight: 500;
+    }
+    
+    .recent-alerts-section {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+    
+    .section-header {
+        display: flex;
+        justify-content-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f8f9fa;
+    }
+    
+    .section-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: #495057;
+        margin: 0;
+    }
+    
+    .alert-card {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .alert-card:hover {
+        background: white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .alert-header {
+        display: flex;
+        justify-content-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .alert-badge {
+        font-size: 11px;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    .badge-critical { background: #5f010a; color: white; }
+    .badge-high { background: #dc3545; color: white; }
+    .badge-medium { background: #ffc107; color: #000; }
+    .badge-low { background: #17a2b8; color: white; }
+    
+    .alert-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        font-size: 14px;
+    }
+    
+    .meta-item {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .meta-label {
+        font-size: 11px;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 3px;
+    }
+    
+    .meta-value {
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .no-alerts {
+        text-align: center;
+        padding: 40px 20px;
+        color: #6c757d;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .controls-section {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+    
+    .controls-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Page Header -->
+    <div class="section-header">
+        <h1 class="display-5 text-danger">
+            <i class="fas fa-fire me-3"></i>
+            Fire Detection Dashboard
+        </h1>
+        <div>
+            <button id="refresh-data" class="btn btn-outline-primary me-2">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+            <a href="{% url 'alert_demo' %}" class="btn btn-outline-info">
+                <i class="fas fa-vial"></i> Demo
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number" id="total-stat">{{ statistics.total_alerts }}</div>
+            <div class="stat-label">Total Alerts</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="active-stat">{{ statistics.active_alerts }}</div>
+            <div class="stat-label">Active Alerts</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="resolved-stat">{{ statistics.resolved_alerts }}</div>
+            <div class="stat-label">Resolved Alerts</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="response-time">0.0s</div>
+            <div class="stat-label">Avg Response Time</div>
+        </div>
+    </div>
+
+    <!-- Controls Section -->
+    <div class="controls-section">
+        <h3 class="mb-3">Dashboard Controls</h3>
+        <div class="controls-grid">
+            <button id="test-alert" class="btn btn-warning">
+                <i class="fas fa-vial"></i> Generate Test Alert
+            </button>
+            <button id="resolve-all" class="btn btn-success">
+                <i class="fas fa-check-double"></i> Resolve All Active
+            </button>
+            <button id="export-alerts" class="btn btn-info">
+                <i class="fas fa-download"></i> Export Alerts
+            </button>
+            <button id="open-manager" class="btn btn-danger">
+                <i class="fas fa-fire"></i> Open Alert Manager
+            </button>
+        </div>
+    </div>
+
+    <!-- Recent Alerts Section -->
+    <div class="recent-alerts-section">
+        <div class="section-header">
+            <h3 class="section-title">Recent Fire Alerts</h3>
+            <span class="badge bg-secondary" id="alerts-count">{{ recent_alerts|length }} alerts</span>
+        </div>
+        
+        <div id="alerts-container">
+            {% if recent_alerts %}
+                {% for alert in recent_alerts %}
+                <div class="alert-card" data-alert-id="{{ alert.id }}">
+                    <div class="alert-header">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-fire text-danger me-2"></i>
+                            <strong>Fire Detected</strong>
+                            <span class="alert-badge badge-{{ alert.severity_level|lower }} ms-2">
+                                {{ alert.severity_level }}
+                            </span>
+                            {% if alert.is_resolved %}
+                                <span class="badge bg-success ms-2">RESOLVED</span>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">{{ alert.timestamp|date:"M d, Y H:i" }}</small>
+                    </div>
+                    
+                    <div class="alert-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">Camera ID</span>
+                            <span class="meta-value">{{ alert.camera_id }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Farm ID</span>
+                            <span class="meta-value">{{ alert.farm_id }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Confidence</span>
+                            <span class="meta-value">{{ alert.confidence|floatformat:1 }}%</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Status</span>
+                            <span class="meta-value">
+                                {% if alert.is_resolved %}
+                                    <span class="text-success">Resolved</span>
+                                {% else %}
+                                    <span class="text-warning">Active</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    {% if not alert.is_resolved %}
+                    <div class="action-buttons">
+                        <button class="btn btn-sm btn-success resolve-btn" data-alert-id="{{ alert.id }}">
+                            <i class="fas fa-check"></i> Resolve
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger delete-btn" data-alert-id="{{ alert.id }}">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-alerts">
+                    <i class="fas fa-shield-alt fa-3x mb-3"></i>
+                    <h4>No Fire Alerts</h4>
+                    <p class="text-muted">Your system is monitoring and ready to detect fire incidents.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+
+<!-- Fire Alerts System -->
+<script src="{% static 'geo/js/fire_alerts.js' %}"></script>
+<script src="{% static 'geo/js/alert_manager.js' %}"></script>
+<script src="{% static 'geo/js/fire_alerts_integration.js' %}"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔥 Fire Alerts Dashboard initialized');
+    
+    // Dashboard functionality
+    setupDashboardControls();
+    
+    // Auto-refresh every 30 seconds
+    setInterval(refreshDashboardData, 30000);
+});
+
+function setupDashboardControls() {
+    // Refresh button
+    document.getElementById('refresh-data').addEventListener('click', refreshDashboardData);
+    
+    // Test alert button
+    document.getElementById('test-alert').addEventListener('click', generateTestAlert);
+    
+    // Resolve all button
+    document.getElementById('resolve-all').addEventListener('click', resolveAllAlerts);
+    
+    // Export button
+    document.getElementById('export-alerts').addEventListener('click', exportAlerts);
+    
+    // Open manager button
+    document.getElementById('open-manager').addEventListener('click', () => {
+        if (window.alertManager) {
+            window.alertManager.toggleAlertPanel();
+        }
+    });
+    
+    // Individual alert actions
+    document.querySelectorAll('.resolve-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const alertId = e.target.dataset.alertId;
+            resolveAlert(alertId);
+        });
+    });
+    
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const alertId = e.target.dataset.alertId;
+            if (confirm('Are you sure you want to delete this alert?')) {
+                deleteAlert(alertId);
+            }
+        });
+    });
+}
+
+async function refreshDashboardData() {
+    try {
+        console.log('🔄 Refreshing dashboard data...');
+        
+        const response = await fetch('/api/fire-alerts/?limit=10');
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            // Update statistics
+            document.getElementById('total-stat').textContent = data.statistics.total_alerts;
+            document.getElementById('active-stat').textContent = data.statistics.active_alerts;
+            document.getElementById('resolved-stat').textContent = data.statistics.resolved_alerts;
+            document.getElementById('alerts-count').textContent = `${data.alerts.length} alerts`;
+            
+            // Update alerts list
+            updateAlertsDisplay(data.alerts);
+            
+            console.log('✅ Dashboard data refreshed');
+        }
+    } catch (error) {
+        console.error('❌ Failed to refresh dashboard:', error);
+        showToast('Failed to refresh dashboard data', 'error');
+    }
+}
+
+function updateAlertsDisplay(alerts) {
+    const container = document.getElementById('alerts-container');
+    
+    if (alerts.length === 0) {
+        container.innerHTML = `
+            <div class="no-alerts">
+                <i class="fas fa-shield-alt fa-3x mb-3"></i>
+                <h4>No Fire Alerts</h4>
+                <p class="text-muted">Your system is monitoring and ready to detect fire incidents.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = alerts.map(alert => `
+        <div class="alert-card" data-alert-id="${alert.id}">
+            <div class="alert-header">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-fire text-danger me-2"></i>
+                    <strong>Fire Detected</strong>
+                    <span class="alert-badge badge-${alert.severity_level.toLowerCase()} ms-2">
+                        ${alert.severity_level}
+                    </span>
+                    ${alert.is_resolved ? '<span class="badge bg-success ms-2">RESOLVED</span>' : ''}
+                </div>
+                <small class="text-muted">${new Date(alert.timestamp).toLocaleString()}</small>
+            </div>
+            
+            <div class="alert-meta">
+                <div class="meta-item">
+                    <span class="meta-label">Camera ID</span>
+                    <span class="meta-value">${alert.camera_id}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Farm ID</span>
+                    <span class="meta-value">${alert.farm_id}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Confidence</span>
+                    <span class="meta-value">${(alert.confidence * 100).toFixed(1)}%</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Status</span>
+                    <span class="meta-value">
+                        ${alert.is_resolved ? 
+                            '<span class="text-success">Resolved</span>' : 
+                            '<span class="text-warning">Active</span>'}
+                    </span>
+                </div>
+            </div>
+            
+            ${!alert.is_resolved ? `
+                <div class="action-buttons">
+                    <button class="btn btn-sm btn-success resolve-btn" data-alert-id="${alert.id}">
+                        <i class="fas fa-check"></i> Resolve
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger delete-btn" data-alert-id="${alert.id}">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            ` : ''}
+        </div>
+    `).join('');
+    
+    // Re-bind event listeners
+    setupDashboardControls();
+}
+
+async function generateTestAlert() {
+    try {
+        const testData = {
+            camera_id: `CAM-${Math.floor(Math.random() * 100)}`,
+            farm_id: `FARM-${Math.floor(Math.random() * 10)}`,
+            confidence: 0.75 + Math.random() * 0.25,
+            timestamp: new Date().toISOString(),
+            notes: 'Test alert generated from dashboard'
+        };
+        
+        const response = await fetch('/api/fire-alerts/webhook/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(testData)
+        });
+        
+        if (response.ok) {
+            showToast('Test alert generated successfully', 'success');
+            setTimeout(refreshDashboardData, 1000);
+        } else {
+            showToast('Failed to generate test alert', 'error');
+        }
+    } catch (error) {
+        console.error('Error generating test alert:', error);
+        showToast('Error generating test alert', 'error');
+    }
+}
+
+async function resolveAlert(alertId) {
+    try {
+        const response = await fetch(`/api/fire-alerts/${alertId}/resolve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        if (response.ok) {
+            showToast('Alert resolved successfully', 'success');
+            refreshDashboardData();
+        } else {
+            showToast('Failed to resolve alert', 'error');
+        }
+    } catch (error) {
+        console.error('Error resolving alert:', error);
+        showToast('Error resolving alert', 'error');
+    }
+}
+
+async function deleteAlert(alertId) {
+    try {
+        const response = await fetch(`/api/fire-alerts/${alertId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        if (response.ok) {
+            showToast('Alert deleted successfully', 'success');
+            refreshDashboardData();
+        } else {
+            showToast('Failed to delete alert', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting alert:', error);
+        showToast('Error deleting alert', 'error');
+    }
+}
+
+async function resolveAllAlerts() {
+    try {
+        // First get all active alert IDs
+        const response = await fetch('/api/fire-alerts/?status=active');
+        const data = await response.json();
+        
+        if (data.status === 'success' && data.alerts.length > 0) {
+            const alertIds = data.alerts.map(alert => alert.id);
+            
+            const resolveResponse = await fetch('/api/fire-alerts/bulk-resolve/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    alert_ids: alertIds,
+                    notes: 'Bulk resolved from dashboard'
+                })
+            });
+            
+            if (resolveResponse.ok) {
+                showToast(`${alertIds.length} alerts resolved successfully`, 'success');
+                refreshDashboardData();
+            } else {
+                showToast('Failed to resolve alerts', 'error');
+            }
+        } else {
+            showToast('No active alerts to resolve', 'info');
+        }
+    } catch (error) {
+        console.error('Error resolving all alerts:', error);
+        showToast('Error resolving alerts', 'error');
+    }
+}
+
+async function exportAlerts() {
+    try {
+        window.open('/api/fire-alerts/export/', '_blank');
+        showToast('Export started - check your downloads', 'success');
+    } catch (error) {
+        console.error('Error exporting alerts:', error);
+        showToast('Error exporting alerts', 'error');
+    }
+}
+
+function showToast(message, type = 'info') {
+    if (window.fireAlertIntegration && window.fireAlertIntegration.showToast) {
+        window.fireAlertIntegration.showToast(message, type);
+    } else {
+        console.log(`${type.toUpperCase()}: ${message}`);
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'leaflet',  # Leaflet for GIS mapping
 ]
 ASGI_APPLICATION = "mysite.asgi.application"
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
 
 MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',

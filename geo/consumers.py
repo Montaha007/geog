@@ -11,7 +11,7 @@ class MapConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, close_code):
         # Handle disconnection if needed
-        await self.close()
+        pass
 
     async def receive(self, text_data):
         try:

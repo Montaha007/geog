@@ -5,12 +5,16 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.gis.geos import GEOSGeometry
 from .models import Location
-from cams.models import Camera
+from cams.models import Camera, FireDetection
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 from asgiref.sync import sync_to_async
 import traceback
+from django.utils import timezone
+from django.core.paginator import Paginator
+from django.db.models import Q
+from datetime import datetime, timedelta
 
 
 @login_required(login_url='/login/')
@@ -62,7 +66,7 @@ async def save_geojson(request):
         features = data.get('features', [])
         name = data.get('name', 'Drawn Shape')
         rtsp = data.get('rtsp', '').strip()
-        stream_id = data.get('stream_id', '').strip()
+        camera_id = data.get('camera_id', '').strip()
 
         if not features:
             return JsonResponse({'message': 'No features found in request.'}, status=400)
@@ -85,7 +89,7 @@ async def save_geojson(request):
 
             if rtsp:
                 await sync_to_async(Camera.objects.create)(
-                    stream_id=stream_id,
+                    camera_id=camera_id,
                     rtsp_url=rtsp,
                     location=location
                 )
@@ -191,3 +195,364 @@ async def delete_location(request, pk):
         await sync_to_async(loc.delete)()
         return redirect('history')
     return redirect('history') # If not POST, just redirect
+
+# =============================================================================
+# FIRE DETECTION VIEWS - Real-time Alert Management
+# =============================================================================
+
+@csrf_exempt
+async def fire_alert_webhook(request):
+    """
+    Webhook endpoint to receive fire detection alerts from the detection service.
+    Expected JSON format:
+    {
+        "camera_id": "CAM-001",
+        "farm_id": "FARM-A", 
+        "confidence": 0.92,
+        "timestamp": "2025-01-29T10:30:00Z",
+        "image_data": "base64_encoded_image",
+        "bounding_box": {"x": 100, "y": 50, "width": 200, "height": 150}
+    }
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST method allowed'}, status=405)
+    
+    try:
+        body = request.body
+        data = await sync_to_async(json.loads)(body)
+        
+        # Validate required fields
+        required_fields = ['camera_id', 'confidence']
+        for field in required_fields:
+            if field not in data:
+                return JsonResponse({'error': f'Missing required field: {field}'}, status=400)
+        
+        # Create fire detection record
+        fire_detection = await sync_to_async(FireDetection.objects.create)(
+            camera_id=data.get('camera_id'),
+            farm_id=data.get('farm_id', 'Unknown'),
+            confidence=float(data.get('confidence')),
+            timestamp=timezone.now(),
+            image_data=data.get('image_data'),
+            bounding_box=data.get('bounding_box'),
+            notes=data.get('notes', '')
+        )
+        
+        # Return success response
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Fire alert recorded successfully',
+            'alert_id': fire_detection.id,
+            'timestamp': fire_detection.timestamp.isoformat()
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON format'}, status=400)
+    except ValueError as e:
+        return JsonResponse({'error': f'Invalid data: {str(e)}'}, status=400)
+    except Exception as e:
+        print(f"Fire alert webhook error: {str(e)}")
+        traceback.print_exc()
+        return JsonResponse({'error': 'Internal server error'}, status=500)
+
+@login_required(login_url='/login/')
+async def get_fire_alerts(request):
+    """
+    API endpoint to fetch fire alerts with filtering and pagination.
+    Query parameters:
+    - status: all, active, resolved
+    - priority: all, high, medium, low  
+    - time_range: all, 1h, 24h, 7d
+    - page: page number for pagination
+    - limit: items per page (default 20)
+    """
+    try:
+        # Get query parameters
+        status = request.GET.get('status', 'all')
+        priority = request.GET.get('priority', 'all')
+        time_range = request.GET.get('time_range', 'all')
+        page = int(request.GET.get('page', 1))
+        limit = min(int(request.GET.get('limit', 20)), 100)  # Max 100 items per page
+        
+        # Build query
+        query = Q()
+        
+        # Filter by status
+        if status == 'active':
+            query &= Q(is_resolved=False)
+        elif status == 'resolved':
+            query &= Q(is_resolved=True)
+        
+        # Filter by priority (based on confidence)
+        if priority == 'critical':
+            query &= Q(confidence__gte=0.9)
+        elif priority == 'high':
+            query &= Q(confidence__gte=0.7, confidence__lt=0.9)
+        elif priority == 'medium':
+            query &= Q(confidence__gte=0.5, confidence__lt=0.7)
+        elif priority == 'low':
+            query &= Q(confidence__lt=0.5)
+        
+        # Filter by time range
+        if time_range != 'all':
+            now = timezone.now()
+            if time_range == '1h':
+                cutoff = now - timedelta(hours=1)
+            elif time_range == '24h':
+                cutoff = now - timedelta(hours=24)
+            elif time_range == '7d':
+                cutoff = now - timedelta(days=7)
+            else:
+                cutoff = None
+            
+            if cutoff:
+                query &= Q(timestamp__gte=cutoff)
+        
+        # Get alerts with pagination
+        alerts_queryset = FireDetection.objects.filter(query).order_by('-timestamp')
+        
+        # Wrap pagination in sync_to_async
+        paginator = Paginator(alerts_queryset, limit)
+        alerts_page = await sync_to_async(paginator.get_page)(page)
+        alerts_list = await sync_to_async(list)(alerts_page)
+        
+        # Format alerts for JSON response
+        alerts_data = []
+        for alert in alerts_list:
+            alerts_data.append({
+                'id': alert.id,
+                'camera_id': alert.camera_id,
+                'farm_id': alert.farm_id,
+                'confidence': alert.confidence,
+                'timestamp': alert.timestamp.isoformat(),
+                'is_resolved': alert.is_resolved,
+                'severity_level': alert.severity_level,
+                'image_url': alert.image_url,
+                'bounding_box': alert.bounding_box,
+                'notes': alert.notes
+            })
+        
+        # Get statistics
+        total_alerts = await sync_to_async(FireDetection.objects.count)()
+        active_alerts = await sync_to_async(FireDetection.objects.filter(is_resolved=False).count)()
+        resolved_alerts = await sync_to_async(FireDetection.objects.filter(is_resolved=True).count)()
+        
+        return JsonResponse({
+            'status': 'success',
+            'alerts': alerts_data,
+            'pagination': {
+                'current_page': page,
+                'total_pages': paginator.num_pages,
+                'total_items': paginator.count,
+                'has_next': alerts_page.has_next(),
+                'has_previous': alerts_page.has_previous()
+            },
+            'statistics': {
+                'total_alerts': total_alerts,
+                'active_alerts': active_alerts,
+                'resolved_alerts': resolved_alerts
+            }
+        })
+        
+    except Exception as e:
+        print(f"Get fire alerts error: {str(e)}")
+        traceback.print_exc()
+        return JsonResponse({'error': 'Failed to fetch alerts'}, status=500)
+
+@csrf_exempt
+@login_required(login_url='/login/')
+async def resolve_fire_alert(request, alert_id):
+    """
+    Mark a fire alert as resolved.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST method allowed'}, status=405)
+    
+    try:
+        # Get the alert
+        alert = await sync_to_async(get_object_or_404)(FireDetection, id=alert_id)
+        
+        # Parse request body for notes
+        body = request.body
+        if body:
+            data = await sync_to_async(json.loads)(body)
+            notes = data.get('notes', '')
+            if notes:
+                alert.notes = notes
+        
+        # Mark as resolved
+        alert.is_resolved = True
+        await sync_to_async(alert.save)()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Alert resolved successfully',
+            'alert_id': alert.id
+        })
+        
+    except Exception as e:
+        print(f"Resolve alert error: {str(e)}")
+        return JsonResponse({'error': 'Failed to resolve alert'}, status=500)
+
+@csrf_exempt
+@login_required(login_url='/login/')
+async def delete_fire_alert(request, alert_id):
+    """
+    Delete a fire alert.
+    """
+    if request.method != 'DELETE':
+        return JsonResponse({'error': 'Only DELETE method allowed'}, status=405)
+    
+    try:
+        # Get the alert
+        alert = await sync_to_async(get_object_or_404)(FireDetection, id=alert_id)
+        
+        # Delete the alert
+        await sync_to_async(alert.delete)()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Alert deleted successfully'
+        })
+        
+    except Exception as e:
+        print(f"Delete alert error: {str(e)}")
+        return JsonResponse({'error': 'Failed to delete alert'}, status=500)
+
+@csrf_exempt
+@login_required(login_url='/login/')
+async def bulk_resolve_alerts(request):
+    """
+    Resolve multiple alerts at once.
+    Expected JSON: {"alert_ids": [1, 2, 3], "notes": "Resolved by admin"}
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST method allowed'}, status=405)
+    
+    try:
+        body = request.body
+        data = await sync_to_async(json.loads)(body)
+        
+        alert_ids = data.get('alert_ids', [])
+        notes = data.get('notes', '')
+        
+        if not alert_ids:
+            return JsonResponse({'error': 'No alert IDs provided'}, status=400)
+        
+        # Update alerts
+        updated_count = await sync_to_async(
+            FireDetection.objects.filter(id__in=alert_ids).update
+        )(is_resolved=True, notes=notes)
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'{updated_count} alerts resolved successfully'
+        })
+        
+    except Exception as e:
+        print(f"Bulk resolve error: {str(e)}")
+        return JsonResponse({'error': 'Failed to resolve alerts'}, status=500)
+
+@login_required(login_url='/login/')
+async def export_fire_alerts(request):
+    """
+    Export fire alerts as JSON.
+    """
+    try:
+        # Get query parameters for filtering
+        status = request.GET.get('status', 'all')
+        time_range = request.GET.get('time_range', 'all')
+        
+        # Build query
+        query = Q()
+        
+        if status == 'active':
+            query &= Q(is_resolved=False)
+        elif status == 'resolved':
+            query &= Q(is_resolved=True)
+        
+        if time_range != 'all':
+            now = timezone.now()
+            if time_range == '1h':
+                cutoff = now - timedelta(hours=1)
+            elif time_range == '24h':
+                cutoff = now - timedelta(hours=24)
+            elif time_range == '7d':
+                cutoff = now - timedelta(days=7)
+            else:
+                cutoff = None
+            
+            if cutoff:
+                query &= Q(timestamp__gte=cutoff)
+        
+        # Get alerts
+        alerts_queryset = FireDetection.objects.filter(query).order_by('-timestamp')
+        alerts_list = await sync_to_async(list)(alerts_queryset)
+        
+        # Format for export
+        export_data = {
+            'export_timestamp': timezone.now().isoformat(),
+            'total_alerts': len(alerts_list),
+            'filters': {
+                'status': status,
+                'time_range': time_range
+            },
+            'alerts': []
+        }
+        
+        for alert in alerts_list:
+            export_data['alerts'].append({
+                'id': alert.id,
+                'camera_id': alert.camera_id,
+                'farm_id': alert.farm_id,
+                'confidence': alert.confidence,
+                'timestamp': alert.timestamp.isoformat(),
+                'is_resolved': alert.is_resolved,
+                'severity_level': alert.severity_level,
+                'notes': alert.notes,
+                'bounding_box': alert.bounding_box
+            })
+        
+        # Create response
+        response = JsonResponse(export_data, json_dumps_params={'indent': 2})
+        filename = f"fire_alerts_{timezone.now().strftime('%Y%m%d_%H%M%S')}.json"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        return response
+        
+    except Exception as e:
+        print(f"Export alerts error: {str(e)}")
+        return JsonResponse({'error': 'Failed to export alerts'}, status=500)
+
+@login_required(login_url='/login/')
+async def fire_alerts_dashboard(request):
+    """
+    Render the fire alerts dashboard page.
+    """
+    # Get recent alerts for initial display
+    recent_alerts = await sync_to_async(
+        lambda: list(FireDetection.objects.order_by('-timestamp')[:10])
+    )()
+    
+    # Get statistics
+    total_alerts = await sync_to_async(FireDetection.objects.count)()
+    active_alerts = await sync_to_async(FireDetection.objects.filter(is_resolved=False).count)()
+    resolved_alerts = await sync_to_async(FireDetection.objects.filter(is_resolved=True).count)()
+    
+    context = {
+        'recent_alerts': recent_alerts,
+        'statistics': {
+            'total_alerts': total_alerts,
+            'active_alerts': active_alerts,
+            'resolved_alerts': resolved_alerts
+        }
+    }
+    
+    return await sync_to_async(render)(request, 'Gis/fire_alerts_dashboard.html', context)
+
+@login_required(login_url='/login/')
+async def alert_demo_view(request):
+    """
+    Render the alert manager demo page.
+    """
+    return await sync_to_async(render)(request, 'Gis/alert_demo.html')

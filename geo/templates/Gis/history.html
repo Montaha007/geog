@@ -115,7 +115,7 @@
                         {# Camera stream buttons for each camera at this location #}
                         {% if loc.cameras.all %}
                             {% for camera in loc.cameras.all %}
-                                {% if camera.stream_id %}
+                                {% if camera.camera_id %}
                                 <button class="btn btn-sm btn-warning live-stream-btn mt-2" data-stream-url="{{ camera.get_stream_url }}">
                                     <i class="fas fa-video me-1"></i>Camera: {{ camera.name }}
                                 </button>
@@ -386,5 +386,12 @@ historySocket.onclose = function(event) {
 historySocket.onerror = function(error) {
     console.error("WebSocket error on history page:", error);
 };
+const socket = new WebSocket("ws://localhost:8000/ws/detections/");
+
+    socket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        console.log("Detection:", data);
+        // Show bounding boxes, alerts, icons, etc.
+    };
 </script>
 {% endblock %}
