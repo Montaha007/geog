@@ -96,14 +96,7 @@ def run_websocket_server(host='localhost', port=5001):
 import redis, json
 
 r = redis.Redis()
-r.publish('fire_alerts', json.dumps({
-    "camera_id": "cam99",
-    "farm_id": "farm3",
-    "confidence": 92.3,
-    "timestamp": "2025-07-28T17:00:00",
-    "bounding_box": [40, 50, 100, 100],
-    "image_url": "http://localhost/static/fire_frame.jpg"
-}))
+
 
 
 if __name__ == "__main__":

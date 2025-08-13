@@ -56,15 +56,7 @@
             updateLegacyConnectionStatus('disconnected');
         });
 
-        // Enhanced error handling
-        socket.off('connect_error').on('connect_error', (error) => {
-            console.error('❌ Enhanced WebSocket connection error:', error);
-            window.alertManager.updateConnectionStatus('error', 'Connection error');
-            showToast('Fire alert system connection error', 'error');
-            
-            // Legacy dashboard support
-            updateLegacyConnectionStatus('error');
-        });
+      
 
         // Enhanced fire alert handling
         socket.off('fire_alert').on('fire_alert', (data) => {

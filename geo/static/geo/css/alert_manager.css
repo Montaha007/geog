@@ -50,7 +50,7 @@
 }
 
 .alert-panel-header {
-    background: linear-gradient(135deg, #dc3545, #c82333);
+    background: linear-gradient(135deg, #eebec3, #ebebeb);
     color: white;
     padding: 20px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -154,11 +154,11 @@
 
 .professional-alert-item.resolved {
     opacity: 0.6;
-    background: #f8f9fa;
+    background: #000000;
 }
 
 .professional-alert-item.resolved .alert-item-header {
-    background: #e9ecef;
+    background: #000000;
 }
 
 /* Alert Item Header */

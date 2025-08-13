@@ -54,9 +54,6 @@ class AlertManager {
         // Create sliding alert panel
         this.createAlertPanel();
         
-        // Create status indicator
-        this.createStatusIndicator();
-        
         // Create sound toggle
         this.createSoundToggle();
     }
@@ -134,6 +131,7 @@ class AlertManager {
                     <div class="col-4">
                         <select id="priority-filter" class="form-select form-select-sm">
                             <option value="all">All Priority</option>
+                            <option value="critical">Critical</option>
                             <option value="high">High</option>
                             <option value="medium">Medium</option>
                             <option value="low">Low</option>
@@ -154,7 +152,7 @@ class AlertManager {
             <div class="alert-list-container">
                 <div id="professional-alerts-list" class="professional-alerts-list">
                     <div id="no-alerts-professional" class="no-alerts-message">
-                        <div class="text-center text-muted py-4">
+                        <div class="text-center text-white py-4">
                             <i class="fas fa-shield-alt fa-2x mb-2"></i>
                             <p>No fire alerts detected</p>
                             <small>System is monitoring and ready</small>
@@ -178,20 +176,6 @@ class AlertManager {
         `;
 
         document.body.appendChild(alertPanel);
-    }
-
-    createStatusIndicator() {
-        const statusIndicator = document.createElement('div');
-        statusIndicator.id = 'connection-status-indicator';
-        statusIndicator.className = 'connection-status-indicator';
-        statusIndicator.innerHTML = `
-            <div class="status-content">
-                <span class="status-dot"></span>
-                <span class="status-text">Connecting...</span>
-            </div>
-        `;
-        
-        document.body.appendChild(statusIndicator);
     }
 
     createSoundToggle() {
@@ -315,8 +299,9 @@ class AlertManager {
     }
 
     calculatePriority(confidence) {
-        if (confidence >= 0.9) return 'high';
-        if (confidence >= 0.7) return 'medium';
+        if (confidence >= 0.9) return 'critical';
+        if (confidence >= 0.7) return 'high';
+        if (confidence >= 0.5) return 'medium';
         return 'low';
     }
 
@@ -331,12 +316,14 @@ class AlertManager {
         alertElement.dataset.alertId = alert.id;
 
         const priorityIcon = {
+            critical: 'fas fa-exclamation-triangle',
             high: 'fas fa-exclamation-triangle',
             medium: 'fas fa-exclamation-circle',
             low: 'fas fa-info-circle'
         };
 
         const priorityColor = {
+            critical: 'text-danger',
             high: 'text-danger',
             medium: 'text-warning',
             low: 'text-info'
@@ -348,7 +335,7 @@ class AlertManager {
                     <div class="alert-title">
                         <i class="${priorityIcon[alert.priority]} ${priorityColor[alert.priority]} me-2"></i>
                         <span class="fw-bold">Fire Detected</span>
-                        <span class="badge bg-${alert.priority === 'high' ? 'danger' : alert.priority === 'medium' ? 'warning' : 'info'} ms-2">
+                        <span class="badge bg-${alert.priority === 'critical' ? 'danger' : alert.priority === 'high' ? 'danger' : alert.priority === 'medium' ? 'warning' : 'info'} ms-2">
                             ${alert.priority.toUpperCase()}
                         </span>
                     </div>
@@ -366,27 +353,27 @@ class AlertManager {
             <div class="alert-item-body">
                 <div class="row">
                     <div class="col-6">
-                        <small class="text-muted">Camera ID</small>
+                        <small class="text-white">Camera ID</small>
                         <div class="fw-semibold">${alert.camera_id || 'Unknown'}</div>
                     </div>
                     <div class="col-6">
-                        <small class="text-muted">Farm ID</small>
+                        <small class="text-white">Farm ID</small>
                         <div class="fw-semibold">${alert.farm_id || 'Unknown'}</div>
                     </div>
                 </div>
                 
                 <div class="row mt-2">
                     <div class="col-6">
-                        <small class="text-muted">Confidence</small>
+                        <small class="text-white">Confidence</small>
                         <div class="fw-semibold">${(alert.confidence * 100).toFixed(1)}%</div>
                     </div>
                     <div class="col-6">
-                        <small class="text-muted">Time</small>
+                        <small class="text-white">Time</small>
                         <div class="fw-semibold">${alert.timestamp.toLocaleTimeString()}</div>
                     </div>
                 </div>
                 
-                <div class="alert-timestamp text-muted mt-2">
+                <div class="alert-timestamp text-white mt-2">
                     <i class="fas fa-clock me-1"></i>
                     ${this.formatTimestamp(alert.timestamp)}
                 </div>
@@ -420,6 +407,7 @@ class AlertManager {
             
             this.updateStatistics();
             this.saveToStorage();
+            this.applyFilters(); // Reapply filters after status change
 
             // Sync with backend
             this.syncResolveToBackend(alertId);
@@ -499,6 +487,7 @@ class AlertManager {
         
         this.updateStatistics();
         this.saveToStorage();
+        this.applyFilters(); // Reapply filters after resolving all alerts
     }
 
     exportAlerts() {
@@ -676,32 +665,77 @@ class AlertManager {
     }
 
     updateConnectionStatus(status, message) {
-        const indicator = document.getElementById('connection-status-indicator');
-        const dot = indicator?.querySelector('.status-dot');
-        const text = indicator?.querySelector('.status-text');
-        
-        if (dot && text) {
-            dot.className = `status-dot ${status}`;
-            text.textContent = message;
-        }
+        // Only log to console - no visual indicators
+        console.log(`🔗 Connection Status: ${status} - ${message}`);
     }
 
     applyFilters() {
-        // Implementation for filtering alerts
+        // Get filter values
         const statusFilter = document.getElementById('status-filter')?.value || 'all';
         const priorityFilter = document.getElementById('priority-filter')?.value || 'all';
         const timeFilter = document.getElementById('time-filter')?.value || 'all';
         
+        // Get current time for time-based filtering
+        const now = new Date();
+        
         document.querySelectorAll('.professional-alert-item').forEach(item => {
             let show = true;
+            const alertId = item.dataset.alertId;
+            const alert = this.alerts.find(a => a.id.toString() === alertId);
             
-            // Apply filters logic here
+            if (!alert) {
+                item.style.display = 'none';
+                return;
+            }
+            
+            // Status filtering
             if (statusFilter !== 'all') {
-                show = show && item.classList.contains(statusFilter);
+                show = show && alert.status === statusFilter;
+            }
+            
+            // Priority filtering
+            if (priorityFilter !== 'all') {
+                show = show && alert.priority === priorityFilter;
+            }
+            
+            // Time filtering
+            if (timeFilter !== 'all') {
+                const alertTime = new Date(alert.timestamp);
+                const timeDiff = now - alertTime;
+                
+                switch(timeFilter) {
+                    case '1h':
+                        show = show && timeDiff <= 3600000; // 1 hour in milliseconds
+                        break;
+                    case '24h':
+                        show = show && timeDiff <= 86400000; // 24 hours in milliseconds
+                        break;
+                    case '7d':
+                        show = show && timeDiff <= 604800000; // 7 days in milliseconds
+                        break;
+                }
             }
             
             item.style.display = show ? 'block' : 'none';
         });
+        
+        // Update filter counts
+        this.updateFilterCounts();
+    }
+
+    updateFilterCounts() {
+        // Count visible alerts after filtering
+        const visibleAlerts = document.querySelectorAll('.professional-alert-item[style*="block"], .professional-alert-item:not([style*="none"])');
+        const visibleCount = Array.from(visibleAlerts).filter(item => {
+            const style = item.style.display;
+            return style !== 'none';
+        }).length;
+        
+        // Update no alerts message visibility
+        const noAlertsMsg = document.getElementById('no-alerts-professional');
+        if (noAlertsMsg) {
+            noAlertsMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
     }
 
     saveToStorage() {
@@ -741,12 +775,9 @@ class AlertManager {
     initializeStatusIndicator() {
         this.updateConnectionStatus('connecting', 'Connecting to alert system...');
         
-        // Auto-hide after 5 seconds if no status update
+        // Log timeout after 5 seconds if no status update
         setTimeout(() => {
-            const indicator = document.getElementById('connection-status-indicator');
-            if (indicator && !indicator.classList.contains('connected')) {
-                indicator.style.opacity = '0.5';
-            }
+            console.log('⏱️ Connection timeout: No status update received after 5 seconds');
         }, 5000);
     }
 }

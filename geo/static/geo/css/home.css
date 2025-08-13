@@ -9,7 +9,7 @@
             --bg-light: #f8fffe;
             --bg-gray: #f1f5f4;
             --text-light: #ffffff;
-            --text-muted: rgba(255, 255, 255, 0.7);
+            --text-muted: rgb(255, 255, 255);
             --text-dark: #023020;
             --shadow-light: 0 2px 10px rgba(2, 48, 32, 0.1);
             --shadow-medium: 0 8px 25px rgba(2, 48, 32, 0.15);
