@@ -8046,3 +8046,61 @@ cv2.error: Unknown C++ exception from OpenCV code
 2025-08-12 13:15:46,494 - camera_stream_service.camera_thread - INFO - Stopping stream for camera 'Camera at camera' (ID: camera).
 2025-08-12 13:16:16,534 - camera_stream_service.camera_thread - ERROR - Failed to open RTSP stream for 'Camera at phone'. Retrying in 5 seconds...
 2025-08-12 13:16:16,535 - camera_stream_service.camera_thread - INFO - Stopping stream for camera 'Camera at phone' (ID: phone).
+2025-08-13 19:51:05,279 - __main__ - INFO - Starting Camera Stream Worker Service...
+2025-08-13 19:51:05,281 - camera_stream_service.camera_manager - INFO - CameraManager initialized.
+2025-08-13 19:51:05,511 - camera_stream_service.camera_thread - INFO - CameraThread for 'Camera at jardin publique' (ID: forest) initialized.
+2025-08-13 19:51:05,512 - camera_stream_service.camera_thread - INFO - Starting stream for camera 'Camera at jardin publique' (ID: forest)...
+2025-08-13 19:51:05,512 - camera_stream_service.camera_manager - INFO - Camera thread for 'Camera at jardin publique' (ID: forest) started successfully.
+2025-08-13 19:51:05,513 - camera_stream_service.camera_thread - INFO - Attempting to open RTSP stream for 'Camera at jardin publique' at rtsp://localhost:8554/forest
+2025-08-13 19:51:05,513 - camera_stream_service.camera_thread - INFO - CameraThread for 'Camera at camera' (ID: camera) initialized.
+2025-08-13 19:51:05,515 - camera_stream_service.camera_thread - INFO - Starting stream for camera 'Camera at camera' (ID: camera)...
+2025-08-13 19:51:05,516 - camera_stream_service.camera_manager - INFO - Camera thread for 'Camera at camera' (ID: camera) started successfully.
+2025-08-13 19:51:05,516 - camera_stream_service.camera_thread - INFO - Attempting to open RTSP stream for 'Camera at camera' at rtsp://192.168.1.5:8554/camera
+2025-08-13 19:51:05,516 - camera_stream_service.camera_thread - INFO - CameraThread for 'Camera at phone' (ID: phone) initialized.
+2025-08-13 19:51:05,517 - camera_stream_service.camera_thread - INFO - Starting stream for camera 'Camera at phone' (ID: phone)...
+2025-08-13 19:51:05,517 - camera_stream_service.camera_manager - INFO - Camera thread for 'Camera at phone' (ID: phone) started successfully.
+2025-08-13 19:51:05,517 - camera_stream_service.camera_thread - INFO - Attempting to open RTSP stream for 'Camera at phone' at rtsp://192.168.1.3:8080/h264_pcm.sdp
+2025-08-13 19:51:05,518 - __main__ - INFO - Camera streams started. Press Ctrl+C to stop.
+2025-08-13 19:51:12,571 - camera_stream_service.camera_thread - INFO - [PARALLEL] Captured snippet for 'Camera at jardin publique' in c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest: c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest\1755111072.jpg
+2025-08-13 19:51:12,848 - camera_stream_service.camera_thread - INFO - Pushed frame for fire detection from camera forest (Task ID: 03befadc-8124-472a-8660-357122e06dbd)
+2025-08-13 19:51:19,564 - camera_stream_service.camera_thread - INFO - [PARALLEL] Captured snippet for 'Camera at jardin publique' in c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest: c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest\1755111079.jpg
+2025-08-13 19:51:19,638 - camera_stream_service.camera_thread - INFO - Pushed frame for fire detection from camera forest (Task ID: 5cb6088b-c921-4f8d-aef0-9ac344bbc5e4)
+2025-08-13 19:51:25,665 - camera_stream_service.fire_alert_listener - WARNING - Fire detection logged: Camera forest, Confidence: 0.8953747749328613%
+2025-08-13 19:51:26,562 - camera_stream_service.camera_thread - INFO - [PARALLEL] Captured snippet for 'Camera at jardin publique' in c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest: c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest\1755111086.jpg
+2025-08-13 19:51:26,617 - camera_stream_service.camera_thread - INFO - Pushed frame for fire detection from camera forest (Task ID: 0cd958da-2b44-44ff-866e-06c59f82a339)
+2025-08-13 19:51:26,866 - camera_stream_service.fire_alert_listener - WARNING - Fire detection logged: Camera forest, Confidence: 0.5088676810264587%
+2025-08-13 19:51:33,585 - camera_stream_service.camera_thread - INFO - [PARALLEL] Captured snippet for 'Camera at jardin publique' in c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest: c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest\1755111093.jpg
+2025-08-13 19:51:33,678 - camera_stream_service.camera_thread - INFO - Pushed frame for fire detection from camera forest (Task ID: 1f665cb1-0b73-4bfe-b37c-00379a5d9134)
+2025-08-13 19:51:37,508 - camera_stream_service.camera_thread - ERROR - Failed to open RTSP stream for 'Camera at phone'. Retrying in 5 seconds...
+2025-08-13 19:51:37,532 - camera_stream_service.camera_thread - ERROR - Failed to open RTSP stream for 'Camera at camera'. Retrying in 5 seconds...
+2025-08-13 19:51:40,596 - camera_stream_service.camera_thread - INFO - [PARALLEL] Captured snippet for 'Camera at jardin publique' in c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest: c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest\1755111100.jpg
+2025-08-13 19:51:40,723 - camera_stream_service.camera_thread - INFO - Pushed frame for fire detection from camera forest (Task ID: 00d63723-357f-4a23-bc1a-0dfff302fede)
+2025-08-13 19:51:41,205 - camera_stream_service.fire_alert_listener - WARNING - Fire detection logged: Camera forest, Confidence: 0.5896695256233215%
+2025-08-13 19:51:42,513 - camera_stream_service.camera_thread - INFO - Attempting to open RTSP stream for 'Camera at phone' at rtsp://192.168.1.3:8080/h264_pcm.sdp
+2025-08-13 19:51:42,544 - camera_stream_service.camera_thread - INFO - Attempting to open RTSP stream for 'Camera at camera' at rtsp://192.168.1.5:8554/camera
+2025-08-13 19:51:47,621 - camera_stream_service.camera_thread - INFO - [PARALLEL] Captured snippet for 'Camera at jardin publique' in c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest: c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest\1755111107.jpg
+2025-08-13 19:51:47,731 - camera_stream_service.camera_thread - INFO - Pushed frame for fire detection from camera forest (Task ID: 0a78a1ab-74cc-48e6-964a-8e0bab3c9dde)
+2025-08-13 19:51:54,671 - camera_stream_service.camera_thread - INFO - [PARALLEL] Captured snippet for 'Camera at jardin publique' in c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest: c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest\1755111114.jpg
+2025-08-13 19:51:54,741 - camera_stream_service.camera_thread - INFO - Pushed frame for fire detection from camera forest (Task ID: e17e7165-01ec-4b9c-8876-b19ca6ae2ea1)
+2025-08-13 19:51:55,158 - camera_stream_service.fire_alert_listener - WARNING - Fire detection logged: Camera forest, Confidence: 0.8594693541526794%
+2025-08-13 19:52:01,708 - camera_stream_service.camera_thread - INFO - [PARALLEL] Captured snippet for 'Camera at jardin publique' in c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest: c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest\1755111121.jpg
+2025-08-13 19:52:01,776 - camera_stream_service.camera_thread - INFO - Pushed frame for fire detection from camera forest (Task ID: 84d1e2bb-03c3-4880-87c6-69636f0adcdf)
+2025-08-13 19:52:02,193 - camera_stream_service.fire_alert_listener - WARNING - Fire detection logged: Camera forest, Confidence: 0.8639137744903564%
+2025-08-13 19:52:08,730 - camera_stream_service.camera_thread - INFO - [PARALLEL] Captured snippet for 'Camera at jardin publique' in c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest: c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest\1755111128.jpg
+2025-08-13 19:52:08,764 - camera_stream_service.camera_thread - INFO - Pushed frame for fire detection from camera forest (Task ID: c6889b33-d9ec-439d-a080-d5303f65604c)
+2025-08-13 19:52:12,523 - camera_stream_service.camera_thread - ERROR - Failed to open RTSP stream for 'Camera at phone'. Retrying in 5 seconds...
+2025-08-13 19:52:12,536 - camera_stream_service.camera_thread - ERROR - Failed to open RTSP stream for 'Camera at camera'. Retrying in 5 seconds...
+2025-08-13 19:52:15,749 - camera_stream_service.camera_thread - INFO - [PARALLEL] Captured snippet for 'Camera at jardin publique' in c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest: c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest\1755111135.jpg
+2025-08-13 19:52:15,821 - camera_stream_service.camera_thread - INFO - Pushed frame for fire detection from camera forest (Task ID: bf17601d-ea9a-4ea0-a499-6cbe441ee20b)
+2025-08-13 19:52:17,530 - camera_stream_service.camera_thread - INFO - Attempting to open RTSP stream for 'Camera at phone' at rtsp://192.168.1.3:8080/h264_pcm.sdp
+2025-08-13 19:52:17,542 - camera_stream_service.camera_thread - INFO - Attempting to open RTSP stream for 'Camera at camera' at rtsp://192.168.1.5:8554/camera
+2025-08-13 19:52:22,905 - camera_stream_service.camera_thread - INFO - [PARALLEL] Captured snippet for 'Camera at jardin publique' in c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest: c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest\1755111142.jpg
+2025-08-13 19:52:22,987 - camera_stream_service.camera_thread - INFO - Pushed frame for fire detection from camera forest (Task ID: ea6fe678-40f8-4387-b4a7-c6faf7decb5b)
+2025-08-13 19:52:29,910 - camera_stream_service.camera_thread - INFO - [PARALLEL] Captured snippet for 'Camera at jardin publique' in c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest: c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest\1755111149.jpg
+2025-08-13 19:52:29,999 - camera_stream_service.camera_thread - INFO - Pushed frame for fire detection from camera forest (Task ID: ba4d56b5-d337-4d63-9547-6a9a3eab9f5c)
+2025-08-13 19:52:30,377 - camera_stream_service.fire_alert_listener - WARNING - Fire detection logged: Camera forest, Confidence: 0.863142192363739%
+2025-08-13 19:52:36,999 - camera_stream_service.camera_thread - INFO - [PARALLEL] Captured snippet for 'Camera at jardin publique' in c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest: c:\Users\Mattoussi\OneDrive\Documents\smart for green\geo\camera_stream_service\output_frames\forest\1755111156.jpg
+2025-08-13 19:52:37,082 - camera_stream_service.camera_thread - INFO - Pushed frame for fire detection from camera forest (Task ID: 1e1d5c42-4ac0-4766-b5a4-40251c531013)
+2025-08-13 19:52:37,542 - camera_stream_service.fire_alert_listener - WARNING - Fire detection logged: Camera forest, Confidence: 0.7733818888664246%
+2025-08-13 19:52:39,738 - camera_stream_service.fire_alert_listener - ERROR - Error getting message from Redis: Connection closed by server.
+2025-08-13 19:52:40,752 - camera_stream_service.fire_alert_listener - ERROR - Error getting message from Redis: Connection closed by server.
